@@ -1,0 +1,213 @@
+{
+  "dataset": "glifo-dataset-2026-10-31.json",
+  "mode": "2d",
+  "synthetic_3d": false,
+  "train_size": 1291,
+  "test_size": 318,
+  "correct": 265,
+  "accuracy": 0.8333333333333334,
+  "confusions_first_40": [
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 0.9995
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 0.9997
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 0.8752
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "o",
+      "probability": 0.8037
+    },
+    {
+      "true": "b",
+      "predicted": "d",
+      "probability": 0.9995
+    },
+    {
+      "true": "d",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "d",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "d",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "f",
+      "predicted": "c",
+      "probability": 1.0
+    },
+    {
+      "true": "g",
+      "predicted": "o",
+      "probability": 0.521
+    },
+    {
+      "true": "g",
+      "predicted": "o",
+      "probability": 0.9917
+    },
+    {
+      "true": "h",
+      "predicted": "n",
+      "probability": 0.8262
+    },
+    {
+      "true": "h",
+      "predicted": "m",
+      "probability": 0.9912
+    },
+    {
+      "true": "h",
+      "predicted": "m",
+      "probability": 0.6266
+    },
+    {
+      "true": "h",
+      "predicted": "n",
+      "probability": 0.8494
+    },
+    {
+      "true": "h",
+      "predicted": "n",
+      "probability": 0.9232
+    },
+    {
+      "true": "i",
+      "predicted": "m",
+      "probability": 0.4631
+    },
+    {
+      "true": "l",
+      "predicted": "r",
+      "probability": 0.4486
+    },
+    {
+      "true": "n",
+      "predicted": "m",
+      "probability": 0.557
+    },
+    {
+      "true": "n",
+      "predicted": "h",
+      "probability": 0.9996
+    },
+    {
+      "true": "n",
+      "predicted": "h",
+      "probability": 0.9991
+    },
+    {
+      "true": "n",
+      "predicted": "m",
+      "probability": 0.8559
+    },
+    {
+      "true": "ñ",
+      "predicted": "m",
+      "probability": 0.9428
+    },
+    {
+      "true": "ñ",
+      "predicted": "m",
+      "probability": 0.9548
+    },
+    {
+      "true": "ñ",
+      "predicted": "m",
+      "probability": 0.9122
+    },
+    {
+      "true": "o",
+      "predicted": "b",
+      "probability": 0.9568
+    },
+    {
+      "true": "o",
+      "predicted": "g",
+      "probability": 1.0
+    },
+    {
+      "true": "p",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "p",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "p",
+      "predicted": "b",
+      "probability": 1.0
+    },
+    {
+      "true": "p",
+      "predicted": "q",
+      "probability": 1.0
+    }
+  ],
+  "elapsed_seconds": 9.99,
+  "model_notes": "Sin identidad de autores: separación por muestra, posible sesgo de autor."
+}

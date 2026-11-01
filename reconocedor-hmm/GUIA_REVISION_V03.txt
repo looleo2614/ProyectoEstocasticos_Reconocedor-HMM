@@ -1,0 +1,27 @@
+REVISIÓN DEL ENUNCIADO OFICIAL — PROTOTIPO v0.3
+
+Fuente: enunciado-proyecto-final-reconocedor-hmm.pdf (5 páginas).
+
+IMPLEMENTADO EN ESTE PROTOTIPO
+- Menú y dos modos 2D/3D con panel ordenado para 27 letras.
+- Esfera con rotación, zoom, reorientación y proyección visual.
+- HMM independientes por letra, entrenamiento externo y modelos cargados.
+- Núcleo HMM implementado sin frameworks estocásticos prohibidos.
+- Panel de probabilidades: a y q en Playwrite AR Regular; demás letras Selawik Regular.
+- Fuentes TTF locales, carga privada en Windows; rueda de ratón sobre el panel.
+- Ayuda con ejemplos del dataset; botones limpiar y reiniciar.
+
+PENDIENTE / LIMITACIONES
+- Reconocimiento robusto de i vertical e inclinada: NO corregido ni validado.
+- 3D entrenado con trayectorias sintéticas, NO escritura esférica real.
+- Proyección futura no reconstruye todos los saltos entre trazos.
+- No se ha validado esta versión en Windows del usuario ni la disponibilidad
+  de fuentes privadas en todos los motores Tk/Tcl.
+- Evaluación independiente por autor y precisión por prefijo pendiente.
+- Defensa oral, repositorio GitHub y envío ZIP: obligaciones de entrega.
+
+La guía NO exige usar estas dos fuentes específicas; son preferencia visual
+adicional del equipo. La guía SÍ exige iconos/imágenes de referencia por letra,
+además de su probabilidad; el glifo tipográfico sirve de referencia estática.
+
+Las probabilidades 100.00% son valores redondeados; no son garantía de acierto.

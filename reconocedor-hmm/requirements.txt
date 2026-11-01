@@ -1,0 +1,2 @@
+# Exclusivamente álgebra de matrices. Ninguna biblioteca HMM externa.
+numpy>=1.26,<3
