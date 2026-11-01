@@ -82,14 +82,26 @@ class HMMApp:
         self._style()
         self.models = {'2d': {}, '3d': {}}
         self.warnings = []
+        # Cargar modelos por la etiqueta interna, no por el nombre del archivo.
+        # Esto evita fallos con 'ñ.json' cuando ZIP/Windows altera su codificación.
         for mode in self.models:
-            for c in LETTERS:
-                filename = ROOT / 'models' / mode / f'{c}.json'
-                if filename.is_file():
-                    try:
-                        self.models[mode][c] = HMM.load(filename)
-                    except Exception as exc:
-                        self.warnings.append(f'{mode} {c}: {exc}')
+            model_dir = ROOT / 'models' / mode
+            if not model_dir.is_dir():
+                self.warnings.append(f'No existe el directorio de modelos: {model_dir}')
+                continue
+            for filename in model_dir.glob('*.json'):
+                if filename.name in ('evaluation.json', 'split.json'):
+                    continue
+                try:
+                    model = HMM.load(filename)
+                    character = model.label
+                    if character in LETTERS:
+                        self.models[mode][character] = model
+                    else:
+                        self.warnings.append(
+                            f'{mode}: etiqueta no reconocida en {filename.name}: {character!r}')
+                except Exception as exc:
+                    self.warnings.append(f'{mode} {filename.name}: {exc}')
         self.references = self._load_references()
         self.mode = ''
         self.canvas = None
@@ -372,6 +384,7 @@ class HMMApp:
             return
         self.strokes.append([p])
         self.redraw()
+        self.schedule_inference()
 
     def mouse_move(self, event):
         if not self.strokes:
@@ -416,7 +429,12 @@ class HMMApp:
 
     def run_inference(self):
         self._inference_id = None
-        if not self.strokes or len(self._mode_info) != 27:
+        if not self.strokes:
+            return
+        if len(self._mode_info) != len(LETTERS):
+            if self.label_status:
+                self.label_status.configure(
+                    text=f'Modelos incompletos: {len(self._mode_info)}/{len(LETTERS)}')
             return
         try:
             if self.mode == '2d':
@@ -427,6 +445,9 @@ class HMMApp:
             ranking = classify(self._mode_info, obs)
             self.prediction = ranking
             self._update_rows(ranking)
+            if self.label_status:
+                self.label_status.configure(
+                    text=f'{len(obs)} observaciones · {len(self._mode_info)} modelos')
             best_char = ranking[0][0] if ranking else None
             model = self._mode_info.get(best_char)
             if model:

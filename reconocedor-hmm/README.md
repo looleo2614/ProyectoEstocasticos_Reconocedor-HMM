@@ -18,7 +18,7 @@ py -m pip install -r requirements.txt
 py main.py
 ```
 
-El programa carga automáticamente `models/2d/*.json` y `models/3d/*.json`, ya incluidos en este paquete. **No hay entrenamiento dentro de la GUI.**
+El programa carga automáticamente los modelos de `models/2d/` y `models/3d/` usando la etiqueta interna de cada JSON (incluida `ñ`), para evitar problemas de codificación de nombres de archivo en Windows. **No hay entrenamiento dentro de la GUI.**
 
 Opcionalmente, para usar entorno virtual:
 
