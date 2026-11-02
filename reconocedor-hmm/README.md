@@ -18,7 +18,7 @@ py -m pip install -r requirements.txt
 py main.py
 ```
 
-El programa carga automáticamente los modelos de `models/2d/` y `models/3d/` usando la etiqueta interna de cada JSON (incluida `ñ`), para evitar problemas de codificación de nombres de archivo en Windows. **No hay entrenamiento dentro de la GUI.**
+El programa carga automáticamente `models/2d/*.json` y `models/3d/*.json`, ya incluidos en este paquete. **No hay entrenamiento dentro de la GUI.**
 
 Opcionalmente, para usar entorno virtual:
 
@@ -57,7 +57,7 @@ reconocedor-hmm/
     audit_dataset.py           # Auditoría del JSON
     train.py                   # Entrenamiento separado de la interfaz
   data/raw/
-    glifo-dataset-2026-10-31.json
+    glifo-dataset-2026-11-02.json
   models/2d/                  # 27 modelos reales entrenados con trazos 2D
     a.json ... z.json
     split.json, evaluation.json
@@ -143,3 +143,36 @@ Estos límites están identificados explícitamente: el prototipo no se presenta
 **Prohibidas para la formulación/cálculo/resolución HMM:** `hmmlearn`, `scikit-learn`, `PyTorch`, `TensorFlow`, `scipy.stats`, o cualquier biblioteca equivalente que sustituya las implementaciones nativas.
 
 No se debe añadir a la GUI un modo ni botón de entrenamiento/calibración. Revisa `docs/MATRIZ_CUMPLIMIENTO.md` para distinguir funcionalidad implementada, pruebas y asuntos pendientes.
+
+
+## Auditoría adicional (01/11/2026)
+
+Se añadió `scripts/evaluate_realtime.py`, que calcula exactitud por prefijos
+(25 %, 50 %, 75 %, 100 % de los puntos), confusiones y grupos de calibración
+utilizando exclusivamente los índices reservados en `models/<modo>/split.json`.
+
+Ejecutar: `py -m scripts.evaluate_realtime --mode 2d` o `--mode 3d`.
+No reentrena modelos ni corrige porcentajes artificialmente.
+
+Resultados de la evaluación reservada (318 muestras):
+- 2D: 110/318, 129/318, 200/318, 265/318 respectivamente.
+- 3D **sintético**: 109/318, 132/318, 200/318, 264/318.
+- Confusión más frecuente: `a` → `q` en 12 muestras de cada modalidad.
+- Grupo de confianza [80 %,100 %] en 2D: 290 predicciones, confianza
+  media 99,319 %, exactitud real 84,483 %. No está calibrado.
+
+La GUI mantiene la v0.11 aprobada por el usuario. La auditoría NO soluciona
+la generalización esférica real ni la proyección entre trazos. La evaluación
+por autor requiere identificadores de escritor que el JSON no proporciona.
+
+
+## v0.15 — Dataset actualizado (2026-11-02)
+
+El dataset predeterminado es `data/raw/glifo-dataset-2026-11-02.json`. Los modelos incluidos son los originales de v0.14 y **no se reentrenaron** al empaquetar este ZIP. Para actualizar los modelos, desde la raíz del proyecto ejecute:
+
+```cmd
+py -m scripts.train --mode 2d --epochs 8
+py -m scripts.train --mode 3d --synthetic-3d --epochs 8
+```
+
+El segundo comando entrena un modelo 3D **sintético**, no basado en capturas 3D reales. Ambos comandos sobrescriben los modelos de sus respectivas carpetas; guarde una copia antes si desea conservarlos.

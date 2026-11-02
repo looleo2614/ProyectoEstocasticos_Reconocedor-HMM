@@ -23,11 +23,11 @@ from src.FeatureExtractor import (LETTERS, extract_2d, extract_3d,
 from src.HMMEngine import HMM, classify, project_2d, project_3d
 
 ROOT = Path(__file__).resolve().parents[1]
-BG = '#0b1422'
-PANEL = '#121f31'
-STROKE = '#62d5d0'
-FUTURE = '#ffca78'
-MUTED = '#93a6c1'
+BG = '#0c1423'
+PANEL = '#152338'
+STROKE = '#64dfd0'
+FUTURE = '#ffc77a'
+MUTED = '#a0b1c7'
 TEXT = '#eff7ff'
 
 
@@ -82,26 +82,14 @@ class HMMApp:
         self._style()
         self.models = {'2d': {}, '3d': {}}
         self.warnings = []
-        # Cargar modelos por la etiqueta interna, no por el nombre del archivo.
-        # Esto evita fallos con 'ñ.json' cuando ZIP/Windows altera su codificación.
         for mode in self.models:
-            model_dir = ROOT / 'models' / mode
-            if not model_dir.is_dir():
-                self.warnings.append(f'No existe el directorio de modelos: {model_dir}')
-                continue
-            for filename in model_dir.glob('*.json'):
-                if filename.name in ('evaluation.json', 'split.json'):
-                    continue
-                try:
-                    model = HMM.load(filename)
-                    character = model.label
-                    if character in LETTERS:
-                        self.models[mode][character] = model
-                    else:
-                        self.warnings.append(
-                            f'{mode}: etiqueta no reconocida en {filename.name}: {character!r}')
-                except Exception as exc:
-                    self.warnings.append(f'{mode} {filename.name}: {exc}')
+            for c in LETTERS:
+                filename = ROOT / 'models' / mode / f'{c}.json'
+                if filename.is_file():
+                    try:
+                        self.models[mode][c] = HMM.load(filename)
+                    except Exception as exc:
+                        self.warnings.append(f'{mode} {c}: {exc}')
         self.references = self._load_references()
         self.mode = ''
         self.canvas = None
@@ -177,9 +165,16 @@ class HMMApp:
         style.configure('Sub.TLabel', background=BG, foreground=MUTED, font=('Segoe UI', 10))
         style.configure('Panel.TLabel', background=PANEL, foreground=TEXT, font=('Segoe UI', 11))
         style.configure('PanelSub.TLabel', background=PANEL, foreground=MUTED, font=('Segoe UI', 10))
-        style.configure('TButton', padding=10, font=('Segoe UI', 11), foreground=TEXT,
-                        background='#24435c', borderwidth=0)
-        style.map('TButton', background=[('active', '#2c657e')])
+        style.configure('TButton', padding=(15, 11), font=('Segoe UI', 10, 'bold'),
+                        foreground=TEXT, background='#29445d', borderwidth=0,
+                        relief='flat', focuscolor=BG)
+        style.map('TButton', background=[('active', '#345c79'), ('pressed', '#203b54')])
+        style.configure('Accent.TButton', padding=(19, 12), font=('Segoe UI', 11, 'bold'),
+                        foreground='#09252a', background=STROKE, borderwidth=0)
+        style.map('Accent.TButton', background=[('active', '#93f1e5'), ('pressed', '#43c5b8')])
+        style.configure('Ghost.TButton', padding=(12, 9), font=('Segoe UI', 10),
+                        foreground=TEXT, background=PANEL, borderwidth=0)
+        style.map('Ghost.TButton', background=[('active', '#2b425a')])
 
     def _clear_window(self):
         if self._inference_id:
@@ -192,25 +187,36 @@ class HMMApp:
         self._unbind_ranking_scroll()
         self._clear_window()
         self.mode = ''
-        shell = ttk.Frame(self.root, padding=35)
+        shell = ttk.Frame(self.root, padding=(58, 42))
         shell.pack(fill='both', expand=True)
-        ttk.Label(shell, text='UNIVERSIDAD DE LOS LLANOS · PROCESOS ESTOCÁSTICOS', style='Sub.TLabel').pack(anchor='w')
-        ttk.Label(shell, text='Reconocedor de caracteres', style='Title.TLabel').pack(anchor='w', pady=(35,5))
-        ttk.Label(shell, text='27 minúsculas · Modelos Ocultos de Markov implementados desde cero',
-                  style='Sub.TLabel').pack(anchor='w', pady=(0,30))
-        for mode, title, sub in (
-            ('2d', 'Modo 2D — plano cartesiano', 'Trazo, clasificación probabilística y proyección de continuación.'),
-            ('3d', 'Modo 3D — esfera', 'Trazo sobre una superficie esférica, rotación, zoom y autocompletado.'),
-        ):
-            frame = ttk.Frame(shell, style='Panel.TFrame', padding=20)
-            frame.pack(fill='x', pady=8)
-            ttk.Label(frame, text=title, font=('Segoe UI', 17, 'bold'),
-                      style='Panel.TLabel').pack(anchor='w')
-            ttk.Label(frame, text=sub, style='PanelSub.TLabel').pack(anchor='w', pady=8)
-            ttk.Button(frame, text='Abrir '+mode.upper(), command=lambda m=mode: self.open_mode(m)).pack(anchor='e')
-        ttk.Button(shell, text='Ayuda / cómo dibujar', command=self.show_help).pack(anchor='w', pady=22)
-        ttk.Label(shell, text='Entrenamiento externo; la aplicación solo realiza inferencia en tiempo real.',
+        ttk.Label(shell, text='UNIVERSIDAD DE LOS LLANOS   /   PROCESOS ESTOCÁSTICOS',
                   style='Sub.TLabel').pack(anchor='w')
+        ttk.Label(shell, text='Reconocedor de caracteres', style='Title.TLabel').pack(
+            anchor='w', pady=(38, 9))
+        ttk.Label(shell, text='Escribe a mano alzada. Explora la clasificación y la trayectoria futura en tiempo real.',
+                  style='Sub.TLabel').pack(anchor='w', pady=(0, 8))
+        ttk.Label(shell, text='27 letras minúsculas  ·  HMM implementados desde cero  ·  Modos 2D y 3D',
+                  style='Sub.TLabel').pack(anchor='w', pady=(0, 27))
+        for mode, badge, title, sub in (
+            ('2d', '01  /  PLANO', 'Escritura en 2D',
+             'Dibuja sobre el lienzo y observa cómo evoluciona la predicción.'),
+            ('3d', '02  /  ESFERA', 'Escritura en 3D',
+             'Dibuja sobre una esfera interactiva. Rota, amplía y reorienta.'),
+        ):
+            frame = ttk.Frame(shell, style='Panel.TFrame', padding=(24, 20))
+            frame.pack(fill='x', pady=7)
+            ttk.Label(frame, text=badge, style='PanelSub.TLabel').pack(anchor='w')
+            ttk.Label(frame, text=title, font=('Segoe UI', 17, 'bold'),
+                      style='Panel.TLabel').pack(anchor='w', pady=(5, 4))
+            ttk.Label(frame, text=sub, style='PanelSub.TLabel').pack(anchor='w', pady=(0, 10))
+            ttk.Button(frame, text='Entrar al modo '+mode.upper()+'   →',
+                       style='Accent.TButton', command=lambda m=mode: self.open_mode(m)).pack(anchor='e')
+        footer = ttk.Frame(shell)
+        footer.pack(fill='x', pady=(20, 0))
+        ttk.Button(footer, text='?  Guía de escritura', style='Ghost.TButton',
+                   command=self.show_help).pack(side='left')
+        ttk.Label(footer, text='Solo inferencia · Entrenamiento fuera de la aplicación',
+                  style='Sub.TLabel').pack(side='right')
 
     def open_mode(self, mode):
         self._clear_window()
@@ -223,23 +229,25 @@ class HMMApp:
         main.pack(fill='both', expand=True)
         top = ttk.Frame(main)
         top.pack(fill='x', pady=(0,12))
-        ttk.Button(top, text='← Menú', command=self.show_home).pack(side='left')
-        ttk.Label(top, text='Reconocedor HMM · '+mode.upper(),
+        ttk.Button(top, text='←  Inicio', style='Ghost.TButton', command=self.show_home).pack(side='left')
+        ttk.Label(top, text='Reconocimiento  '+mode.upper(),
                   font=('Segoe UI', 17, 'bold')).pack(side='left', padx=16)
-        ttk.Button(top, text='Ayuda', command=self.show_help).pack(side='right')
+        ttk.Button(top, text='?  Ayuda', style='Ghost.TButton', command=self.show_help).pack(side='right')
         if mode == '3d':
-            ttk.Button(top, text='Reorientar esfera', command=self.reset_camera).pack(side='right', padx=10)
+            ttk.Button(top, text='⟳  Reorientar esfera', style='Ghost.TButton', command=self.reset_camera).pack(side='right', padx=10)
         body = ttk.Frame(main)
         body.pack(fill='both', expand=True)
-        left = ttk.Frame(body, style='Panel.TFrame', padding=12)
+        left = ttk.Frame(body, style='Panel.TFrame', padding=16)
         left.pack(side='left', fill='both', expand=True, padx=(0,12))
-        right = ttk.Frame(body, style='Panel.TFrame', width=300, padding=12)
+        right = ttk.Frame(body, style='Panel.TFrame', width=330, padding=16)
         right.pack(side='right', fill='y')
         right.pack_propagate(False)
-        hint = ('Izquierdo: dibujar sobre esfera · Derecho: rotar · Rueda: zoom'
-                if mode == '3d' else 'Mantén pulsado el ratón para dibujar · Suelta para levantar el lápiz')
-        ttk.Label(left, text=hint, style='PanelSub.TLabel').pack(anchor='w', pady=(2,8))
-        self.canvas = tk.Canvas(left, bg='#101f31', highlightbackground='#24435c', highlightthickness=1)
+        ttk.Label(left, text='LIENZO DE ESCRITURA', style='Panel.TLabel',
+                  font=('Segoe UI', 11, 'bold')).pack(anchor='w', pady=(0, 4))
+        hint = ('Izquierdo: dibujar  ·  Derecho: rotar  ·  Rueda: zoom'
+                if mode == '3d' else 'Mantén pulsado para dibujar  ·  Suelta para separar trazos')
+        ttk.Label(left, text=hint, style='PanelSub.TLabel').pack(anchor='w', pady=(0, 12))
+        self.canvas = tk.Canvas(left, bg='#101e30', highlightbackground='#344c66', highlightthickness=1)
         self.canvas.pack(fill='both', expand=True)
         self.canvas.bind('<Configure>', lambda _: self.redraw())
         self.canvas.bind('<ButtonPress-1>', self.mouse_start)
@@ -252,12 +260,22 @@ class HMMApp:
         self.canvas.bind('<Button-5>', lambda e: self.zoom_by(1/1.08))
         controls = ttk.Frame(left, style='Panel.TFrame')
         controls.pack(fill='x', pady=(10,0))
-        ttk.Button(controls, text='Limpiar lienzo', command=self.clear_canvas).pack(side='left')
-        ttk.Button(controls, text='Reiniciar captura', command=self.restart_capture).pack(side='left', padx=8)
+        ttk.Button(controls, text='✕  Limpiar', command=self.clear_canvas).pack(side='left')
+        ttk.Button(controls, text='↻  Reiniciar captura', command=self.restart_capture).pack(side='left', padx=8)
         self.label_status = ttk.Label(controls, text='Sin observaciones', style='PanelSub.TLabel')
         self.label_status.pack(side='right')
-        ttk.Label(right, text='CLASIFICACIÓN · P(letra | observaciones)',
-                  style='Panel.TLabel', font=('Segoe UI', 10, 'bold')).pack(anchor='w', pady=(0,8))
+        legend = ttk.Frame(left, style='Panel.TFrame')
+        legend.pack(fill='x', pady=(10, 0))
+        tk.Label(legend, text='━━  Trazo realizado', bg=PANEL, fg=STROKE,
+                 font=('Segoe UI', 9)).pack(side='left')
+        tk.Label(legend, text='┄┄  Continuación estimada', bg=PANEL, fg=FUTURE,
+                 font=('Segoe UI', 9)).pack(side='left', padx=(20, 0))
+        ttk.Label(right, text='PROBABILIDADES', style='Panel.TLabel',
+                  font=('Segoe UI', 12, 'bold')).pack(anchor='w', pady=(0, 5))
+        ttk.Label(right, text='27 letras · Ordenadas de mayor a menor',
+                  style='PanelSub.TLabel').pack(anchor='w', pady=(0, 3))
+        ttk.Label(right, text='P(letra | observaciones)',
+                  style='PanelSub.TLabel').pack(anchor='w', pady=(0, 12))
         warning = ('Modelos 3D SINTÉTICOS (no entrenados con trazos 3D reales).'
                    if mode == '3d' and any(m.metadata.get('source') == 'PROYECCION_2D_A_ESFERA_SINTETICA'
                                           for m in self._mode_info.values()) else '')
@@ -297,7 +315,10 @@ class HMMApp:
             score = tk.Label(item, text='3.70%', font=('Consolas', 10),
                              bg=PANEL, fg=MUTED)
             score.pack(side='right')
-            self.rows.append((glyph, text, score))
+            # Barra proporcional, integrada sin cambiar la disposición del listado.
+            bar = tk.Canvas(item, height=3, bg=PANEL, highlightthickness=0)
+            bar.pack(side='bottom', fill='x', padx=(54, 0), pady=(0, 2))
+            self.rows.append((glyph, text, score, bar))
         self._update_rows([])
         self.redraw()
 
@@ -384,7 +405,6 @@ class HMMApp:
             return
         self.strokes.append([p])
         self.redraw()
-        self.schedule_inference()
 
     def mouse_move(self, event):
         if not self.strokes:
@@ -429,12 +449,7 @@ class HMMApp:
 
     def run_inference(self):
         self._inference_id = None
-        if not self.strokes:
-            return
-        if len(self._mode_info) != len(LETTERS):
-            if self.label_status:
-                self.label_status.configure(
-                    text=f'Modelos incompletos: {len(self._mode_info)}/{len(LETTERS)}')
+        if not self.strokes or len(self._mode_info) != 27:
             return
         try:
             if self.mode == '2d':
@@ -445,9 +460,6 @@ class HMMApp:
             ranking = classify(self._mode_info, obs)
             self.prediction = ranking
             self._update_rows(ranking)
-            if self.label_status:
-                self.label_status.configure(
-                    text=f'{len(obs)} observaciones · {len(self._mode_info)} modelos')
             best_char = ranking[0][0] if ranking else None
             model = self._mode_info.get(best_char)
             if model:
@@ -483,7 +495,7 @@ class HMMApp:
 
     def _update_rows(self, ranking):
         ordered = ranking or [(char, 1/27, 0.) for char in LETTERS]
-        for i, ((glyph, name, probability), (char, p, _)) in enumerate(zip(self.rows, ordered)):
+        for i, ((glyph, name, probability, bar), (char, p, _)) in enumerate(zip(self.rows, ordered)):
             glyph.delete('all')
             # Tk Canvas posiciona el texto por su caja tipográfica, que en
             # Playwrite AR deja mucho espacio invisible arriba. Ajustar usando
@@ -497,6 +509,13 @@ class HMMApp:
             name.configure(text=char, font=self._letter_font(char, 14),
                            fg=(STROKE if i==0 and ranking else TEXT))
             probability.configure(text=f'{100*p:6.2f} %', fg=(STROKE if i==0 and ranking else MUTED))
+            bar.delete('all')
+            bar.update_idletasks()
+            bar_width = max(bar.winfo_width(), 1)
+            if p > 0:
+                bar.create_rectangle(0, 0, max(1, bar_width * min(max(p, 0), 1)), 3,
+                                     fill=STROKE if i == 0 and ranking else '#456d86',
+                                     outline='')
 
     def _canvas_2d(self):
         w, h = self.canvas.winfo_width(),self.canvas.winfo_height()
@@ -505,6 +524,12 @@ class HMMApp:
             self.canvas.create_line(20,y,w-20,y,fill='#2e465d',dash=(4,6))
             self.canvas.create_text(25,y-12,text=description,anchor='w',fill=MUTED,
                                     font=('Segoe UI',9))
+        if not self.strokes:
+            self.canvas.create_text(w/2, h/2-12, text='Dibuja una letra aquí',
+                                    fill='#8ea6bf', font=('Segoe UI', 17, 'bold'))
+            self.canvas.create_text(w/2, h/2+20,
+                                    text='La proyección aparecerá como una línea punteada',
+                                    fill='#708aa5', font=('Segoe UI', 10))
         for stroke in self.strokes:
             pts = [(p[0]/1000*w,p[1]/1000*h) for p in stroke]
             if len(pts)>1:
@@ -553,6 +578,9 @@ class HMMApp:
                     self.canvas.create_oval(sx-3,sy-3,sx+3,sy+3,fill=STROKE,outline='')
         if len(self.future)>1:
             self._sphere_curve(self.future,FUTURE,width=3,dash=(5,7))
+        if not self.strokes:
+            self.canvas.create_text(cx, cy+r+26, text='Dibuja sobre la superficie de la esfera',
+                                    fill=MUTED, font=('Segoe UI', 10))
 
     def redraw(self):
         if self.canvas is None or not self.canvas.winfo_exists() or not self.mode:

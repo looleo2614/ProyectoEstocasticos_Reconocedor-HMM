@@ -5,7 +5,7 @@ import collections
 from src.FeatureExtractor import LETTERS, validate_strokes
 
 ROOT = Path(__file__).resolve().parents[1]
-file = ROOT / 'data/raw/glifo-dataset-2026-10-31.json'
+file = ROOT / 'data/raw/glifo-dataset-2026-11-02.json'
 source = json.loads(file.read_text(encoding='utf-8'))
 assert set(source) == set(LETTERS)
 print('Letra | Muestras | Trazos | Puntos | Invalidas')

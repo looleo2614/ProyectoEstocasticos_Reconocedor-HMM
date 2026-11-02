@@ -73,11 +73,15 @@ class HMM:
         alpha = np.zeros((T, n), dtype=float)
         scales = np.empty(T, dtype=float)
         alpha[0] = self.pi * self.B[:, o[0]]
-        scales[0] = max(float(alpha[0].sum()), _EPS)
+        if alpha[0].sum() == 0:
+            raise ValueError('Observación inicial imposible bajo este HMM')
+        scales[0] = float(alpha[0].sum())
         alpha[0] /= scales[0]
         for t in range(1, T):
             alpha[t] = (alpha[t - 1] @ self.A) * self.B[:, o[t]]
-            scales[t] = max(float(alpha[t].sum()), _EPS)
+            if alpha[t].sum() == 0:
+                raise ValueError('Secuencia imposible bajo este HMM')
+            scales[t] = float(alpha[t].sum())
             alpha[t] /= scales[t]
         return alpha, scales, float(np.log(scales).sum())
 
@@ -229,8 +233,11 @@ def baum_welch(model: HMM, sequences: list[list[int]], epochs: int = 8,
 
 
 def classify(models: dict[str, HMM], obs: Iterable[int],
-             priors: dict[str, float] | None = None) -> list[tuple[str, float, float]]:
+             priors: dict[str, float] | None = None,
+             temperature: float = 1.0) -> list[tuple[str, float, float]]:
     """(letra, P(letra|O), log P(O|λ_letra)), ordenado descendente."""
+    if not math.isfinite(temperature) or temperature <= 0:
+        raise ValueError('temperature debe ser positiva y finita')
     obs = list(obs)
     if not models:
         return []
@@ -241,8 +248,10 @@ def classify(models: dict[str, HMM], obs: Iterable[int],
         ll = model.forward(obs)[2]
         prior = 1. / len(models) if priors is None else float(priors[character])
         logs.append((character, ll + math.log(max(prior, _EPS)), ll))
-    lognorm = logsumexp(np.asarray([v[1] for v in logs]))
-    results = [(ch, math.exp(score - lognorm), ll) for ch, score, ll in logs]
+    # Temperatura aplicada a log-posteriores no normalizados; T=1 reproduce
+    # exactamente el comportamiento original. Solo calibrar con validación.
+    lognorm = logsumexp(np.asarray([v[1] / temperature for v in logs]))
+    results = [(ch, math.exp(score / temperature - lognorm), ll) for ch, score, ll in logs]
     return sorted(results, key=lambda x: x[1], reverse=True)
 
 

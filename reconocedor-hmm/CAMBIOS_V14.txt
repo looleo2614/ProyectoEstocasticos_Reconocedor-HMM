@@ -1,0 +1,12 @@
+v0.14 — Refinamiento visual de la GUI
+
+- Pantalla inicial rediseñada con tarjetas de modos.
+- Jerarquía visual, espacios y botones coherentes.
+- Encabezados y ayudas de interacción más claros.
+- Leyenda para distinguir trazo real y continuación.
+- Mensajes de inicio en lienzos vacíos.
+- Barras visuales de probabilidad en el listado.
+- Se conserva la ayuda con referencias, las tipografías y la lógica HMM de v0.13.
+- Sin dependencias adicionales ni entrenamiento en la GUI.
+
+Ejecutar: py main.py

@@ -8,7 +8,7 @@ from src.FeatureExtractor import extract_2d
 from src.HMMEngine import HMM, classify
 
 ROOT = Path(__file__).resolve().parents[1]
-data = json.loads((ROOT/'data/raw/glifo-dataset-2026-10-31.json').read_text(encoding='utf-8'))
+data = json.loads((ROOT/'data/raw/glifo-dataset-2026-11-02.json').read_text(encoding='utf-8'))
 models = {p.stem:HMM.load(p) for p in (ROOT/'models/2d').glob('?.json') if p.stem != 'evaluation'}
 models.update({p.stem:HMM.load(p) for p in (ROOT/'models/2d').glob('ñ.json')})
 for letter in ('i','l','j','q'):

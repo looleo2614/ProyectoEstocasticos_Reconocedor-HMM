@@ -18,7 +18,7 @@ from src.FeatureExtractor import LETTERS, K, extract_2d, extract_3d, map_2d_to_s
 from src.HMMEngine import left_right_model, baum_welch, classify
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DATA = ROOT / 'data/raw/glifo-dataset-2026-10-31.json'
+DEFAULT_DATA = ROOT / 'data/raw/glifo-dataset-2026-11-02.json'
 
 
 def main() -> None:

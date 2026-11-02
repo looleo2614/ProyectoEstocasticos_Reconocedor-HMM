@@ -35,3 +35,16 @@
 3. Ensayar reconocimiento parcial de letras en vivo, comparar hiperparámetros, medir latencia y errores, incluyendo diferentes autores.
 4. Validar GUI en Windows y dispositivos táctiles y verificar referencia de fuentes y convenciones de escritura.
 5. Publicar repositorio propio y preparar defensa matemática presencial.
+
+
+## Revisión cuantitativa adicional — 01/11/2026
+
+- GUI: validada visualmente por el usuario en Windows 11 (v0.11); no extrapolar a todos los equipos.
+- Probabilidades iniciales: uniformes 1/27 cuando no hay observaciones,
+  implementado en `HMMEngine.classify` y verificado en prueba automática.
+- Evaluación por prefijos: implementada **offline** en `scripts/evaluate_realtime.py`.
+- Calibración: **diagnosticada, no corregida**. Confianza elevada no implica certeza.
+- Reconocimiento 3D real: **pendiente**; evaluación disponible solo sintética.
+- Predicción espacial después de PEN_UP: **pendiente**.
+- Evaluación por autor: **no realizable con el JSON actual sin identidad de escritor**.
+- Comparación sistemática de hiperparámetros y reentrenamiento: **pendiente**.

@@ -1,0 +1,187 @@
+{
+  "mode": "3d",
+  "synthetic_3d": true,
+  "split": "holdout por muestra, no por autor",
+  "prefixes": [
+    {
+      "fraction": 0.25,
+      "correct": 109,
+      "total": 318,
+      "accuracy": 0.342767
+    },
+    {
+      "fraction": 0.5,
+      "correct": 132,
+      "total": 318,
+      "accuracy": 0.415094
+    },
+    {
+      "fraction": 0.75,
+      "correct": 200,
+      "total": 318,
+      "accuracy": 0.628931
+    },
+    {
+      "fraction": 1.0,
+      "correct": 264,
+      "total": 318,
+      "accuracy": 0.830189
+    }
+  ],
+  "confusions": [
+    {
+      "real": "a",
+      "predicho": "q",
+      "casos": 12
+    },
+    {
+      "real": "p",
+      "predicho": "b",
+      "casos": 5
+    },
+    {
+      "real": "h",
+      "predicho": "n",
+      "casos": 4
+    },
+    {
+      "real": "n",
+      "predicho": "h",
+      "casos": 4
+    },
+    {
+      "real": "d",
+      "predicho": "q",
+      "casos": 3
+    },
+    {
+      "real": "ñ",
+      "predicho": "m",
+      "casos": 3
+    },
+    {
+      "real": "p",
+      "predicho": "q",
+      "casos": 3
+    },
+    {
+      "real": "y",
+      "predicho": "g",
+      "casos": 3
+    },
+    {
+      "real": "n",
+      "predicho": "m",
+      "casos": 2
+    },
+    {
+      "real": "z",
+      "predicho": "e",
+      "casos": 2
+    },
+    {
+      "real": "b",
+      "predicho": "d",
+      "casos": 1
+    },
+    {
+      "real": "f",
+      "predicho": "c",
+      "casos": 1
+    },
+    {
+      "real": "g",
+      "predicho": "o",
+      "casos": 1
+    },
+    {
+      "real": "h",
+      "predicho": "m",
+      "casos": 1
+    },
+    {
+      "real": "i",
+      "predicho": "m",
+      "casos": 1
+    },
+    {
+      "real": "l",
+      "predicho": "r",
+      "casos": 1
+    },
+    {
+      "real": "o",
+      "predicho": "g",
+      "casos": 1
+    },
+    {
+      "real": "o",
+      "predicho": "b",
+      "casos": 1
+    },
+    {
+      "real": "r",
+      "predicho": "n",
+      "casos": 1
+    },
+    {
+      "real": "v",
+      "predicho": "ñ",
+      "casos": 1
+    },
+    {
+      "real": "v",
+      "predicho": "b",
+      "casos": 1
+    },
+    {
+      "real": "w",
+      "predicho": "m",
+      "casos": 1
+    },
+    {
+      "real": "y",
+      "predicho": "x",
+      "casos": 1
+    }
+  ],
+  "calibration_bins": [
+    {
+      "interval": [
+        0.2,
+        0.4
+      ],
+      "n": 8,
+      "confianza_media": 0.33703,
+      "exactitud": 1.0
+    },
+    {
+      "interval": [
+        0.4,
+        0.6
+      ],
+      "n": 13,
+      "confianza_media": 0.50051,
+      "exactitud": 0.53846
+    },
+    {
+      "interval": [
+        0.6,
+        0.8
+      ],
+      "n": 7,
+      "confianza_media": 0.71501,
+      "exactitud": 0.42857
+    },
+    {
+      "interval": [
+        0.8,
+        1.0
+      ],
+      "n": 290,
+      "confianza_media": 0.99439,
+      "exactitud": 0.84828
+    }
+  ],
+  "warning": "Los porcentajes son puntuaciones posteriores de modelos generativos; NO equivalen a precisión calibrada. El 3D sintético NO valida la esfera real."
+}

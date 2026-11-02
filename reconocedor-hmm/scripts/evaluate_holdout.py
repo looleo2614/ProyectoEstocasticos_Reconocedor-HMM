@@ -16,7 +16,7 @@ def main():
     args = parser.parse_args()
     folder = ROOT / 'models' / args.mode
     split = json.loads((folder / 'split.json').read_text(encoding='utf-8'))
-    dataset = json.loads((ROOT / 'data/raw/glifo-dataset-2026-10-31.json').read_text(encoding='utf-8'))
+    dataset = json.loads((ROOT / 'data/raw/glifo-dataset-2026-11-02.json').read_text(encoding='utf-8'))
     models = {letter: HMM.load(folder / f'{letter}.json') for letter in LETTERS}
     correct = total = 0
     print('ADVERTENCIA: 3D es sintético, no mide generalización a escritura esférica real.' if args.mode == '3d' else 'Evaluación de partición reservada por muestra; escritores no separados.')
