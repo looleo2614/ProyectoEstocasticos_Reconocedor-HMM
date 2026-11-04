@@ -617,6 +617,21 @@ class HMMApp:
 
     def _canvas_2d(self):
         w, h = self.canvas.winfo_width(),self.canvas.winfo_height()
+        spacing = 30
+        for x in range(0, w, spacing):
+            major = (x % (spacing * 5) == 0)
+            self.canvas.create_line(
+                x, 0, x, h,
+                fill="#e5eeea" if not major else "#cbdcd4",
+                width=1
+            )
+        for y in range(0, h, spacing):
+            major = (y % (spacing * 5) == 0)
+            self.canvas.create_line(
+                0, y, w, y,
+                fill="#e5eeea" if not major else "#cbdcd4",
+                width=1
+            )
         for ratio, description in ((.16,'ascendente'),(.38,'altura x'),(.72,'línea base'),(.91,'descendente')):
             y = h*ratio
             self.canvas.create_line(20,y,w-20,y,fill="#ffa892",dash=(4,6))
@@ -656,16 +671,18 @@ class HMMApp:
 
     def _canvas_3d(self):
         cx,cy,r=self._sphere_dimensions()
-        self.canvas.create_oval(cx-r,cy-r,cx+r,cy+r,fill="#feffff",outline="#0bbfc8",width=2)
+        self.canvas.create_oval(cx-r,cy-r,cx+r,cy+r,fill="#e5edee",outline="#20bfc8",width=2)
         # Mallado de latitudes y longitudes, visible solamente en hemisferio frontal.
         for phi_deg in range(-75,90,15):
             phi=math.radians(phi_deg)
             self._sphere_curve([sphere_from_angles(math.radians(i),phi)
-                                for i in range(-180,181,3)],fill="#9df1f6")
+                                for i in range(-180,181,3)],fill="#cbdcd4")
+            #fill="#e5eeea" if not major else "#cbdcd4",
+            #STROKE = "#087f68"      # trazo y acento principal
         for theta_deg in range(-180,180,15):
             theta=math.radians(theta_deg)
             self._sphere_curve([sphere_from_angles(theta,math.radians(i))
-                                for i in range(-89,90,3)],fill="#9df1f6")
+                                for i in range(-89,90,3)],fill="#cbdcd4")
         for stroke in self.strokes:
             coords=[p[:3] for p in stroke]
             if len(coords)>1:
