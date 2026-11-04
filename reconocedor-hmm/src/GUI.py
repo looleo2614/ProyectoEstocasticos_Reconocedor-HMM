@@ -23,12 +23,16 @@ from src.FeatureExtractor import (LETTERS, extract_2d, extract_3d,
 from src.HMMEngine import HMM, classify, project_2d, project_3d
 
 ROOT = Path(__file__).resolve().parents[1]
-BG = '#0c1423'
-PANEL = '#152338'
-STROKE = '#64dfd0'
-FUTURE = '#ffc77a'
-MUTED = '#a0b1c7'
-TEXT = '#eff7ff'
+# Paleta visual rosa empolvado, malva y azul profundo.
+# Los cambios se limitan a la presentación; la lógica HMM permanece intacta.
+BG = "#f4f7f5"          # fondo general
+PANEL = "#ffffff"       # tarjetas y paneles
+STROKE = "#087f68"      # trazo y acento principal
+FUTURE = "#20bfc8"      # continuación estimada
+MUTED = "#667572"       # texto secundario
+TEXT = "#202b2a"        # texto principal
+LAVENDER = "#087f68"    # acento secundario
+CANVAS_BG = "#f4f7f5"   # superficie de escritura
 
 
 def load_bundled_fonts():
@@ -45,6 +49,87 @@ def load_bundled_fonts():
             except (AttributeError, OSError):
                 pass
     return loaded
+
+
+class RoundedButton(tk.Canvas):
+    """Botón dibujado en Canvas para conservar esquinas redondeadas y hover."""
+    def __init__(self, master, text, command, variant='normal', parent_bg=None, **kwargs):
+        self.variant = variant
+        self.command = command
+        self.text = text
+        self.colors = {
+            'accent': (STROKE, "#1acdaa", "#FEFFFF"),
+            'ghost': ("#087f68", STROKE, "#FEFFFF"),
+            'normal': ("#ff653e", "#ff8668", "#FEFFFF"),
+        }
+        base, hover, fg = self.colors.get(variant, self.colors['normal'])
+        self.base, self.hover, self.fg = base, hover, fg
+        width = max(112, int(len(text) * 7.4 + 34))
+        height = 42 if variant != 'accent' else 46
+        if parent_bg is None:
+            try:
+                parent_bg = master.cget('background')
+                if not parent_bg:
+                    parent_bg = PANEL
+            except tk.TclError:
+                parent_bg = PANEL
+        super().__init__(master,width=width,height=height,bg=parent_bg,highlightthickness=0,
+                    bd=0,relief='flat',cursor='hand2',**kwargs)
+        self._draw(self.base)
+        self.bind('<Enter>', lambda e: self._draw(self.hover))
+        self.bind('<Leave>', lambda e: self._draw(self.base))
+        self.bind('<Button-1>', self._invoke)
+
+    def _draw(self, color):
+        self.delete('all')
+        w, h = int(self['width']), int(self['height'])
+        r = 15
+        self.create_arc(0, 0, 2*r, 2*r, start=90, extent=90, fill=color, outline=color)
+        self.create_arc(w-2*r, 0, w, 2*r, start=0, extent=90, fill=color, outline=color)
+        self.create_arc(0, h-2*r, 2*r, h, start=180, extent=90, fill=color, outline=color)
+        self.create_arc(w-2*r, h-2*r, w, h, start=270, extent=90, fill=color, outline=color)
+        self.create_rectangle(r, 0, w-r, h, fill=color, outline=color)
+        self.create_rectangle(0, r, w, h-r, fill=color, outline=color)
+        self.create_text(w/2, h/2, text=self.text, fill=self.fg,
+                         font=('Segoe UI', 10, 'bold'))
+
+    def _invoke(self, _event=None):
+        if self.command:
+            self.command()
+
+
+class RoundedPanel(tk.Frame):
+    """Panel con fondo redondeado y un área interior para sus controles."""
+    def __init__(self, master, panel=PANEL, padding=11, radius=22, **kwargs):
+        super().__init__(master, bg=BG, bd=0, highlightthickness=0, **kwargs)
+        self._padding, self._radius, self._panel = padding, radius, panel
+        self._bg_canvas = tk.Canvas(self, bg=BG, highlightthickness=0, bd=0)
+        self._bg_canvas.pack(fill='both', expand=True)
+        self.content = tk.Frame(self._bg_canvas, bg=panel, bd=0)
+        self._window = self._bg_canvas.create_window(padding, padding, anchor='nw', window=self.content)
+        self._bg_canvas.bind('<Configure>', self._resize)
+
+    def _resize(self, event):
+        p, r = self._padding, self._radius
+        w, h = max(event.width, 2), max(event.height, 2)
+        self._bg_canvas.delete('panel-shape')
+        # Rectángulo redondeado construido con arcos y rectángulos superpuestos.
+        c, x0, y0, x1, y1 = self._panel, 1, 1, w-1, h-1
+        self._bg_canvas.create_arc(x0, y0, x0+2*r, y0+2*r, start=90, extent=90,
+                                   fill=c, outline=c, tags='panel-shape')
+        self._bg_canvas.create_arc(x1-2*r, y0, x1, y0+2*r, start=0, extent=90,
+                                   fill=c, outline=c, tags='panel-shape')
+        self._bg_canvas.create_arc(x0, y1-2*r, x0+2*r, y1, start=180, extent=90,
+                                   fill=c, outline=c, tags='panel-shape')
+        self._bg_canvas.create_arc(x1-2*r, y1-2*r, x1, y1, start=270, extent=90,
+                                   fill=c, outline=c, tags='panel-shape')
+        self._bg_canvas.create_rectangle(x0+r, y0, x1-r, y1, fill=c, outline=c,
+                                         tags='panel-shape')
+        self._bg_canvas.create_rectangle(x0, y0+r, x1, y1-r, fill=c, outline=c,
+                                         tags='panel-shape')
+        self._bg_canvas.tag_lower('panel-shape')
+        self._bg_canvas.coords(self._window, p, p)
+        self._bg_canvas.itemconfigure(self._window, width=max(1, w-2*p), height=max(1, h-2*p))
 
 
 class SphereCamera:
@@ -75,10 +160,10 @@ class HMMApp:
     def __init__(self):
         self._private_fonts = load_bundled_fonts()
         self.root = tk.Tk()
-        self.root.title('Unillanos · Reconocedor HMM 2D/3D')
+        self.root.title('UNILLANOS · RECONOCEDOR HMM 2D/3D')
         self.root.geometry('1250x790')
         self.root.minsize(960, 630)
-        self.root.configure(bg=BG)
+        self.root.configure(bg='#ffffff')
         self._style()
         self.models = {'2d': {}, '3d': {}}
         self.warnings = []
@@ -165,16 +250,10 @@ class HMMApp:
         style.configure('Sub.TLabel', background=BG, foreground=MUTED, font=('Segoe UI', 10))
         style.configure('Panel.TLabel', background=PANEL, foreground=TEXT, font=('Segoe UI', 11))
         style.configure('PanelSub.TLabel', background=PANEL, foreground=MUTED, font=('Segoe UI', 10))
-        style.configure('TButton', padding=(15, 11), font=('Segoe UI', 10, 'bold'),
-                        foreground=TEXT, background='#29445d', borderwidth=0,
-                        relief='flat', focuscolor=BG)
-        style.map('TButton', background=[('active', '#345c79'), ('pressed', '#203b54')])
-        style.configure('Accent.TButton', padding=(19, 12), font=('Segoe UI', 11, 'bold'),
-                        foreground='#09252a', background=STROKE, borderwidth=0)
-        style.map('Accent.TButton', background=[('active', '#93f1e5'), ('pressed', '#43c5b8')])
-        style.configure('Ghost.TButton', padding=(12, 9), font=('Segoe UI', 10),
-                        foreground=TEXT, background=PANEL, borderwidth=0)
-        style.map('Ghost.TButton', background=[('active', '#2b425a')])
+        style.configure('TButton', padding=(12, 9), font=('Segoe UI', 10, 'bold'),
+                        foreground="#DBFEE2", background=STROKE, borderwidth=0, relief='flat')
+        style.map('TButton', background=[('active', "#DBFEE2")],
+                  foreground=[('active', "#DBFEE2")])
 
     def _clear_window(self):
         if self._inference_id:
@@ -187,36 +266,43 @@ class HMMApp:
         self._unbind_ranking_scroll()
         self._clear_window()
         self.mode = ''
-        shell = ttk.Frame(self.root, padding=(58, 42))
+        shell = ttk.Frame(self.root, padding=(42, 34))
         shell.pack(fill='both', expand=True)
-        ttk.Label(shell, text='UNIVERSIDAD DE LOS LLANOS   /   PROCESOS ESTOCÁSTICOS',
+        ttk.Label(shell, text='PROCESOS ESTOCÁSTICOS   /   PROYECTO FINAL',
                   style='Sub.TLabel').pack(anchor='w')
-        ttk.Label(shell, text='Reconocedor de caracteres', style='Title.TLabel').pack(
+        ttk.Label(shell, text='꩜ RECONOCEDOR DE CARACTERES [HMM] ꩜', style='Title.TLabel').pack(
             anchor='w', pady=(38, 9))
-        ttk.Label(shell, text='Escribe a mano alzada. Explora la clasificación y la trayectoria futura en tiempo real.',
-                  style='Sub.TLabel').pack(anchor='w', pady=(0, 8))
-        ttk.Label(shell, text='27 letras minúsculas  ·  HMM implementados desde cero  ·  Modos 2D y 3D',
-                  style='Sub.TLabel').pack(anchor='w', pady=(0, 27))
-        for mode, badge, title, sub in (
-            ('2d', '01  /  PLANO', 'Escritura en 2D',
-             'Dibuja sobre el lienzo y observa cómo evoluciona la predicción.'),
-            ('3d', '02  /  ESFERA', 'Escritura en 3D',
-             'Dibuja sobre una esfera interactiva. Rota, amplía y reorienta.'),
-        ):
-            frame = ttk.Frame(shell, style='Panel.TFrame', padding=(24, 20))
-            frame.pack(fill='x', pady=7)
+        ttk.Label(shell, text='Escribe a mano alzada. Explora la clasificación y la trayectoria futura en tiempo real ˎˊ˗',
+                  style='Sub.TLabel').pack(anchor='e', pady=(0, 8))
+        ttk.Label(shell, text='27 letras minúsculas  ·  HMM implementados desde cero  ·  Modos 2D y 3D ˎˊ˗',
+                  style='Sub.TLabel').pack(anchor='e', pady=(0, 27))
+        cards = ttk.Frame(shell)
+        cards.pack(fill='both', expand=True)
+        cards.columnconfigure(0, weight=1, uniform='modes')
+        cards.columnconfigure(1, weight=1, uniform='modes')
+        for col, (mode, badge, title, sub) in enumerate((
+            ('2d', '01  /  Plano', 'ᯓ★ ESCRITURA EN 2D',
+             '°- Dibuja sobre el lienzo y observa cómo evoluciona la predicción.'),
+            ('3d', '02  /  Esfera', 'ᯓ★ ESCRITURA EN 3D',
+             '°- Dibuja sobre una esfera interactiva. Rota, amplía y reorienta.'),
+        )):
+            card = RoundedPanel(cards, padding=18, radius=24)
+            card.grid(row=0, column=col, sticky='nsew', padx=(0 if col == 0 else 9, 9 if col == 0 else 0), pady=7)
+            frame = card.content
             ttk.Label(frame, text=badge, style='PanelSub.TLabel').pack(anchor='w')
-            ttk.Label(frame, text=title, font=('Segoe UI', 17, 'bold'),
-                      style='Panel.TLabel').pack(anchor='w', pady=(5, 4))
-            ttk.Label(frame, text=sub, style='PanelSub.TLabel').pack(anchor='w', pady=(0, 10))
-            ttk.Button(frame, text='Entrar al modo '+mode.upper()+'   →',
-                       style='Accent.TButton', command=lambda m=mode: self.open_mode(m)).pack(anchor='e')
+            ttk.Label(frame, text=title, font=('Segoe UI', 16, 'bold'),
+                      style='Panel.TLabel').pack(anchor='w', pady=(12, 8))
+            ttk.Label(frame, text=sub, style='PanelSub.TLabel', wraplength=330,
+                      justify='left').pack(anchor='w', pady=(0, 22))
+            RoundedButton(frame, text='ENTRAR AL MODO '+mode.upper()+'  ✿︎',
+                          command=lambda m=mode: self.open_mode(m), variant='accent').pack(anchor='w')
         footer = ttk.Frame(shell)
         footer.pack(fill='x', pady=(20, 0))
-        ttk.Button(footer, text='?  Guía de escritura', style='Ghost.TButton',
-                   command=self.show_help).pack(side='left')
+        RoundedButton(footer, text='✩°｡  GUÍA DE ESCRITURA', command=self.show_help,parent_bg=BG).pack(side='left')
         ttk.Label(footer, text='Solo inferencia · Entrenamiento fuera de la aplicación',
-                  style='Sub.TLabel').pack(side='right')
+                  style='Sub.TLabel').pack(side='top', anchor='e')
+        ttk.Label(footer, text='UNIVERSIDAD DE LOS LLANOS',
+                          style='Sub.TLabel').pack(side='top', anchor='e')
 
     def open_mode(self, mode):
         self._clear_window()
@@ -229,25 +315,27 @@ class HMMApp:
         main.pack(fill='both', expand=True)
         top = ttk.Frame(main)
         top.pack(fill='x', pady=(0,12))
-        ttk.Button(top, text='←  Inicio', style='Ghost.TButton', command=self.show_home).pack(side='left')
-        ttk.Label(top, text='Reconocimiento  '+mode.upper(),
+        RoundedButton(top, text='←  INICIO', command=self.show_home, parent_bg=BG).pack(side='left')
+        ttk.Label(top, text='RECONOCIMIENTO  '+mode.upper(),
                   font=('Segoe UI', 17, 'bold')).pack(side='left', padx=16)
-        ttk.Button(top, text='?  Ayuda', style='Ghost.TButton', command=self.show_help).pack(side='right')
+        RoundedButton(top, text='?  AYUDA', command=self.show_help, parent_bg=BG).pack(side='right')
         if mode == '3d':
-            ttk.Button(top, text='⟳  Reorientar esfera', style='Ghost.TButton', command=self.reset_camera).pack(side='right', padx=10)
+            RoundedButton(top, text='⟳  REORIENTAR ESFERA', command=self.reset_camera, variant='ghost', parent_bg=BG).pack(side='right', padx=10)
         body = ttk.Frame(main)
         body.pack(fill='both', expand=True)
-        left = ttk.Frame(body, style='Panel.TFrame', padding=16)
-        left.pack(side='left', fill='both', expand=True, padx=(0,12))
-        right = ttk.Frame(body, style='Panel.TFrame', width=330, padding=16)
-        right.pack(side='right', fill='y')
-        right.pack_propagate(False)
+        right_card = RoundedPanel(body, padding=15, radius=22, width=360)
+        right_card.pack(side='left', fill='y', padx=(0,12))
+        right_card.pack_propagate(False)
+        right = right_card.content
+        left_card = RoundedPanel(body, padding=15, radius=22)
+        left_card.pack(side='right', fill='both', expand=True)
+        left = left_card.content
         ttk.Label(left, text='LIENZO DE ESCRITURA', style='Panel.TLabel',
                   font=('Segoe UI', 11, 'bold')).pack(anchor='w', pady=(0, 4))
         hint = ('Izquierdo: dibujar  ·  Derecho: rotar  ·  Rueda: zoom'
                 if mode == '3d' else 'Mantén pulsado para dibujar  ·  Suelta para separar trazos')
         ttk.Label(left, text=hint, style='PanelSub.TLabel').pack(anchor='w', pady=(0, 12))
-        self.canvas = tk.Canvas(left, bg='#101e30', highlightbackground='#344c66', highlightthickness=1)
+        self.canvas = tk.Canvas(left, bg=CANVAS_BG, highlightbackground=LAVENDER, highlightthickness=2, bd=0)
         self.canvas.pack(fill='both', expand=True)
         self.canvas.bind('<Configure>', lambda _: self.redraw())
         self.canvas.bind('<ButtonPress-1>', self.mouse_start)
@@ -260,8 +348,8 @@ class HMMApp:
         self.canvas.bind('<Button-5>', lambda e: self.zoom_by(1/1.08))
         controls = ttk.Frame(left, style='Panel.TFrame')
         controls.pack(fill='x', pady=(10,0))
-        ttk.Button(controls, text='✕  Limpiar', command=self.clear_canvas).pack(side='left')
-        ttk.Button(controls, text='↻  Reiniciar captura', command=self.restart_capture).pack(side='left', padx=8)
+        RoundedButton(controls, text='✕  LIMPIAR', command=self.clear_canvas).pack(side='left')
+        RoundedButton(controls, text='↻  REINICIAR CAPTURA', command=self.restart_capture).pack(side='left', padx=8)
         self.label_status = ttk.Label(controls, text='Sin observaciones', style='PanelSub.TLabel')
         self.label_status.pack(side='right')
         legend = ttk.Frame(left, style='Panel.TFrame')
@@ -287,8 +375,8 @@ class HMMApp:
         list_box = tk.Frame(right, bg=PANEL)
         list_box.pack(fill='both', expand=True)
         scroll = tk.Scrollbar(list_box, orient='vertical', width=13,
-                              bg='#315574', troughcolor='#0b1422',
-                              activebackground='#62d5d0', relief='flat', bd=0)
+                              bg=STROKE, troughcolor=BG,
+                              activebackground=LAVENDER, relief='flat', bd=0)
         scroll.pack(side='right', fill='y')
         list_canvas = tk.Canvas(list_box, bg=PANEL, highlightthickness=0,
                                 yscrollcommand=scroll.set, borderwidth=0)
@@ -308,16 +396,15 @@ class HMMApp:
             item = tk.Frame(self.rows_frame, bg=PANEL)
             item.pack(fill='x', pady=1)
             # Icono de glifo estático según referencia: tipografía visible en el panel.
-            glyph = tk.Canvas(item, width=46, height=52, bg='#21394c', highlightthickness=0)
+            glyph = tk.Canvas(item, width=48, height=48, bg=PANEL, highlightthickness=0)
             glyph.pack(side='left', padx=(0,8))
-            text = tk.Label(item, text='a', font=('Segoe UI', 11), bg=PANEL, fg=TEXT, anchor='w')
-            text.pack(side='left', fill='x', expand=True)
+            text = tk.Label(item, text='', bg=PANEL)
             score = tk.Label(item, text='3.70%', font=('Consolas', 10),
                              bg=PANEL, fg=MUTED)
             score.pack(side='right')
             # Barra proporcional, integrada sin cambiar la disposición del listado.
             bar = tk.Canvas(item, height=3, bg=PANEL, highlightthickness=0)
-            bar.pack(side='bottom', fill='x', padx=(54, 0), pady=(0, 2))
+            bar.pack(side='bottom', fill='x', padx=(5, 0), pady=(0, 2))
             self.rows.append((glyph, text, score, bar))
         self._update_rows([])
         self.redraw()
@@ -325,10 +412,10 @@ class HMMApp:
     def show_help(self):
         popup = tk.Toplevel(self.root)
         popup.configure(bg=BG)
-        popup.title('Ayuda · Referencia de escritura')
+        popup.title('AYUDA · REFERENCIA DE ESCRITURA')
         # Tamaño inicial calculado después de construir todos los controles.
         popup.transient(self.root)
-        tk.Label(popup, bg=BG, fg=TEXT, text='Cómo dibujar las 27 letras',
+        tk.Label(popup, bg=BG, fg=TEXT, text='CÓMO DIBUJAR LAS 27 LETRAS',
                  font=('Segoe UI', 18, 'bold')).pack(pady=(18,12))
         guide = ('Dibuja las letras MINÚSCULAS como en las referencias.\n'
                  'a: círculo y rayita; q: cruz inferior.\n'
@@ -344,14 +431,27 @@ class HMMApp:
         letters = tk.Frame(popup, bg=BG)
         letters.pack(padx=18, pady=14)
         for i, letter in enumerate(LETTERS):
-            # Corrección EXCLUSIVA de la ayuda: reservar espacio para los
-            # descendentes de Playwrite AR, sin mover el texto según bbox().
-            # Las casillas de clasificación permanecen idénticas a v0.7.
-            preview = tk.Canvas(letters, width=52, height=64,
-                                bg='#21394c', highlightthickness=0)
-            preview.grid(row=i//9, column=i%9, padx=2, pady=2)
-            preview.create_text(26, 25, text=letter, fill=TEXT,
-                                anchor='center', font=self._letter_font(letter, 23))
+            preview = tk.Canvas(
+                letters,
+                width=58,
+                height=58,
+                bg=BG,
+                highlightthickness=0
+            )
+            preview.grid(row=i//9, column=i%9, padx=4, pady=4)
+            preview.create_oval(
+                3, 3, 55, 55,
+                fill="#087F68",
+                outline="#087F68",
+                width=2
+            )
+            preview.create_text(
+                29, 29,
+                text=letter,
+                fill="#FFFFFF",
+                anchor='center',
+                font=self._letter_font(letter, 22)
+            )
         popup.update_idletasks()
         width = max(630, popup.winfo_reqwidth() + 24)
         height = max(540, popup.winfo_reqheight() + 24)
@@ -500,36 +600,34 @@ class HMMApp:
             # Tk Canvas posiciona el texto por su caja tipográfica, que en
             # Playwrite AR deja mucho espacio invisible arriba. Ajustar usando
             # el bbox real del glifo evita recortar 'a', 'q' y descendentes.
-            item_id = glyph.create_text(23, 26, text=char, fill=TEXT, anchor='center',
-                                        font=self._letter_font(char, 19))
+            glyph.create_oval(3, 3, 45, 45,fill="#00867B",outline="#00867B",width=2)
+            item_id = glyph.create_text(24, 24,text=char,fill="#FEFFFF",anchor='center',font=self._letter_font(char, 19))
             bounds = glyph.bbox(item_id)
             if bounds:
                 x0, y0, x1, y1 = bounds
-                glyph.move(item_id, 23 - (x0 + x1) / 2, 26 - (y0 + y1) / 2)
-            name.configure(text=char, font=self._letter_font(char, 14),
-                           fg=(STROKE if i==0 and ranking else TEXT))
+                glyph.move(item_id, 24 - (x0 + x1) / 2, 24 - (y0 + y1) / 2)
             probability.configure(text=f'{100*p:6.2f} %', fg=(STROKE if i==0 and ranking else MUTED))
             bar.delete('all')
             bar.update_idletasks()
             bar_width = max(bar.winfo_width(), 1)
             if p > 0:
                 bar.create_rectangle(0, 0, max(1, bar_width * min(max(p, 0), 1)), 3,
-                                     fill=STROKE if i == 0 and ranking else '#456d86',
+                                     fill=STROKE if i == 0 and ranking else LAVENDER,
                                      outline='')
 
     def _canvas_2d(self):
         w, h = self.canvas.winfo_width(),self.canvas.winfo_height()
         for ratio, description in ((.16,'ascendente'),(.38,'altura x'),(.72,'línea base'),(.91,'descendente')):
             y = h*ratio
-            self.canvas.create_line(20,y,w-20,y,fill='#2e465d',dash=(4,6))
+            self.canvas.create_line(20,y,w-20,y,fill="#ffa892",dash=(4,6))
             self.canvas.create_text(25,y-12,text=description,anchor='w',fill=MUTED,
                                     font=('Segoe UI',9))
         if not self.strokes:
             self.canvas.create_text(w/2, h/2-12, text='Dibuja una letra aquí',
-                                    fill='#8ea6bf', font=('Segoe UI', 17, 'bold'))
+                                    fill=MUTED, font=('Segoe UI', 17, 'bold'))
             self.canvas.create_text(w/2, h/2+20,
                                     text='La proyección aparecerá como una línea punteada',
-                                    fill='#708aa5', font=('Segoe UI', 10))
+                                    fill="#667572", font=('Segoe UI', 10))
         for stroke in self.strokes:
             pts = [(p[0]/1000*w,p[1]/1000*h) for p in stroke]
             if len(pts)>1:
@@ -558,16 +656,16 @@ class HMMApp:
 
     def _canvas_3d(self):
         cx,cy,r=self._sphere_dimensions()
-        self.canvas.create_oval(cx-r,cy-r,cx+r,cy+r,fill='#15334a',outline='#5b8ca4',width=2)
+        self.canvas.create_oval(cx-r,cy-r,cx+r,cy+r,fill="#feffff",outline="#0bbfc8",width=2)
         # Mallado de latitudes y longitudes, visible solamente en hemisferio frontal.
         for phi_deg in range(-75,90,15):
             phi=math.radians(phi_deg)
             self._sphere_curve([sphere_from_angles(math.radians(i),phi)
-                                for i in range(-180,181,3)],fill='#2b536d')
+                                for i in range(-180,181,3)],fill="#9df1f6")
         for theta_deg in range(-180,180,15):
             theta=math.radians(theta_deg)
             self._sphere_curve([sphere_from_angles(theta,math.radians(i))
-                                for i in range(-89,90,3)],fill='#2b536d')
+                                for i in range(-89,90,3)],fill="#9df1f6")
         for stroke in self.strokes:
             coords=[p[:3] for p in stroke]
             if len(coords)>1:
