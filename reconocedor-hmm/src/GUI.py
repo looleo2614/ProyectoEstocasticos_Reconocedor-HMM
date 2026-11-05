@@ -25,7 +25,7 @@ from src.HMMEngine import HMM, classify, project_2d, project_3d
 ROOT = Path(__file__).resolve().parents[1]
 # Paleta visual rosa empolvado, malva y azul profundo.
 # Los cambios se limitan a la presentación; la lógica HMM permanece intacta.
-BG = "#f4f7f5"          # fondo general
+BG = "#c4eada"          # fondo general
 PANEL = "#ffffff"       # tarjetas y paneles
 STROKE = "#087f68"      # trazo y acento principal
 FUTURE = "#20bfc8"      # continuación estimada
@@ -33,6 +33,41 @@ MUTED = "#667572"       # texto secundario
 TEXT = "#202b2a"        # texto principal
 LAVENDER = "#087f68"    # acento secundario
 CANVAS_BG = "#f4f7f5"   # superficie de escritura
+
+# Capas de sombra mezcladas visualmente con el fondo para simular un difuminado.
+# Tkinter no ofrece desenfoque gaussiano nativo; varias capas suaves producen
+# un relieve difuminado sin añadir dependencias ni afectar los controles.
+SHADOW_LAYERS = ("#91b4a8", "#96b9ad", "#9dc0b4", "#a5c8bc", "#aecfc4")
+
+
+def create_rounded_rect(canvas, x1, y1, x2, y2, radius, fill, tags=None):
+    """Dibuja un rectángulo con esquinas redondeadas en un Canvas."""
+    radius = max(2, min(radius, (x2 - x1) / 2, (y2 - y1) / 2))
+    points = [
+        x1 + radius, y1, x2 - radius, y1,
+        x2, y1, x2, y1 + radius,
+        x2, y2 - radius, x2, y2,
+        x2 - radius, y2, x1 + radius, y2,
+        x1, y2, x1, y2 - radius,
+        x1, y1 + radius, x1, y1
+    ]
+    return canvas.create_polygon(
+        points, smooth=True, splinesteps=24, fill=fill, outline=fill, tags=tags
+    )
+
+
+def soft_shadow(parent, *, background=PANEL, offset=9):
+    """Devuelve (marco_exterior, contenido) con una sombra suave en capas."""
+    outer = tk.Frame(parent, bg=BG, bd=0, highlightthickness=0)
+    layer = outer
+    for color in SHADOW_LAYERS:
+        next_layer = tk.Frame(layer, bg=color, bd=0, highlightthickness=0)
+        next_layer.pack(fill="both", expand=True, padx=(0, 1), pady=(0, 1))
+        layer = next_layer
+    content = tk.Frame(layer, bg=background, bd=0, highlightthickness=0)
+    content.pack(fill="both", expand=True, padx=(0, offset), pady=(0, offset))
+    return outer, content
+
 
 
 def load_bundled_fonts():
@@ -60,7 +95,7 @@ class RoundedButton(tk.Canvas):
         self.colors = {
             'accent': (STROKE, "#1acdaa", "#FEFFFF"),
             'ghost': ("#087f68", STROKE, "#FEFFFF"),
-            'normal': ("#ff653e", "#ff8668", "#FEFFFF"),
+            'normal': ("#2db49f", "#96d3ca", "#FEFFFF"),
         }
         base, hover, fg = self.colors.get(variant, self.colors['normal'])
         self.base, self.hover, self.fg = base, hover, fg
@@ -113,23 +148,26 @@ class RoundedPanel(tk.Frame):
         p, r = self._padding, self._radius
         w, h = max(event.width, 2), max(event.height, 2)
         self._bg_canvas.delete('panel-shape')
-        # Rectángulo redondeado construido con arcos y rectángulos superpuestos.
-        c, x0, y0, x1, y1 = self._panel, 1, 1, w-1, h-1
-        self._bg_canvas.create_arc(x0, y0, x0+2*r, y0+2*r, start=90, extent=90,
-                                   fill=c, outline=c, tags='panel-shape')
-        self._bg_canvas.create_arc(x1-2*r, y0, x1, y0+2*r, start=0, extent=90,
-                                   fill=c, outline=c, tags='panel-shape')
-        self._bg_canvas.create_arc(x0, y1-2*r, x0+2*r, y1, start=180, extent=90,
-                                   fill=c, outline=c, tags='panel-shape')
-        self._bg_canvas.create_arc(x1-2*r, y1-2*r, x1, y1, start=270, extent=90,
-                                   fill=c, outline=c, tags='panel-shape')
-        self._bg_canvas.create_rectangle(x0+r, y0, x1-r, y1, fill=c, outline=c,
-                                         tags='panel-shape')
-        self._bg_canvas.create_rectangle(x0, y0+r, x1, y1-r, fill=c, outline=c,
-                                         tags='panel-shape')
+        x0, y0, x1, y1 = 1, 1, w-3, h-3
+
+        # Sombra difuminada: varias siluetas redondeadas desplazadas hacia abajo.
+        for index, color in enumerate(SHADOW_LAYERS, start=1):
+            shift = index * 1.35
+            create_rounded_rect(
+                self._bg_canvas, x0 + shift, y0 + shift,
+                x1, y1, r, color, tags='panel-shape'
+            )
+
+        # Superficie principal con esquinas redondeadas.
+        create_rounded_rect(
+            self._bg_canvas, x0, y0, x1 - 5, y1 - 5,
+            r, self._panel, tags='panel-shape'
+        )
         self._bg_canvas.tag_lower('panel-shape')
         self._bg_canvas.coords(self._window, p, p)
-        self._bg_canvas.itemconfigure(self._window, width=max(1, w-2*p), height=max(1, h-2*p))
+        self._bg_canvas.itemconfigure(
+            self._window, width=max(1, w-2*p-5), height=max(1, h-2*p-5)
+        )
 
 
 class SphereCamera:
@@ -292,20 +330,37 @@ class HMMApp:
         shell.pack(fill='both', expand=True)
         ttk.Label(shell, text='PROCESOS ESTOCÁSTICOS   /   PROYECTO FINAL',
                   style='Sub.TLabel').pack(anchor='w')
-        ttk.Label(shell, text='꩜ RECONOCEDOR DE CARACTERES [HMM] ꩜', style='Title.TLabel').pack(
+        ttk.Label(shell, text=' RECONOCEDOR DE CARACTERES [HMM] ', style='Title.TLabel').pack(
             anchor='w', pady=(38, 9))
-        ttk.Label(shell, text='Escribe a mano alzada. Explora la clasificación y la trayectoria futura en tiempo real ˎˊ˗',
-                  style='Sub.TLabel').pack(anchor='e', pady=(0, 8))
-        ttk.Label(shell, text='27 letras minúsculas  ·  HMM implementados desde cero  ·  Modos 2D y 3D ˎˊ˗',
-                  style='Sub.TLabel').pack(anchor='e', pady=(0, 27))
+        # Tarjeta compacta con bordes redondeados.
+        intro_card = RoundedPanel(shell, padding=10, radius=24)
+        intro_card.pack(
+            anchor='e',
+            fill='x',
+            expand=True,
+            pady=(0, 20),
+            padx=(0, 6)
+        )
+        intro_text = intro_card.content
+        intro_text.pack(anchor='e', padx=15, pady=(15, 25))
+        ttk.Label(
+            intro_text,
+            text='Escribe a mano alzada. Explora la clasificación y la trayectoria futura en tiempo real.',
+            style='PanelSub.TLabel'
+        ).pack(anchor='e', pady=(0, 6))
+        ttk.Label(
+            intro_text,
+            text='27 letras minúsculas  ·  HMM implementados desde cero  ·  Modos 2D y 3D.',
+            style='PanelSub.TLabel'
+        ).pack(anchor='e')
         cards = ttk.Frame(shell)
         cards.pack(fill='both', expand=True)
         cards.columnconfigure(0, weight=1, uniform='modes')
         cards.columnconfigure(1, weight=1, uniform='modes')
         for col, (mode, badge, title, sub) in enumerate((
-            ('2d', '01  /  Plano', 'ᯓ★ ESCRITURA EN 2D',
+            ('2d', '01  /  Plano', 'ESCRITURA EN 2D',
              '°- Dibuja sobre el lienzo y observa cómo evoluciona la predicción.'),
-            ('3d', '02  /  Esfera', 'ᯓ★ ESCRITURA EN 3D',
+            ('3d', '02  /  Esfera', 'ESCRITURA EN 3D',
              '°- Dibuja sobre una esfera interactiva. Rota, amplía y reorienta.'),
         )):
             card = RoundedPanel(cards, padding=18, radius=24)
@@ -316,11 +371,11 @@ class HMMApp:
                       style='Panel.TLabel').pack(anchor='w', pady=(12, 8))
             ttk.Label(frame, text=sub, style='PanelSub.TLabel', wraplength=330,
                       justify='left').pack(anchor='w', pady=(0, 22))
-            RoundedButton(frame, text='ENTRAR AL MODO '+mode.upper()+'  ✿︎',
+            RoundedButton(frame, text='ENTRAR AL MODO '+mode.upper()+' ->',
                           command=lambda m=mode: self.open_mode(m), variant='accent').pack(anchor='w')
         footer = ttk.Frame(shell)
         footer.pack(fill='x', pady=(20, 0))
-        RoundedButton(footer, text='✩°｡  GUÍA DE ESCRITURA', command=self.show_help,parent_bg=BG).pack(side='left')
+        RoundedButton(footer, text='|° GUÍA DE ESCRITURA °|', command=self.show_help,parent_bg=BG).pack(side='left')
         ttk.Label(footer, text='Solo inferencia · Entrenamiento fuera de la aplicación',
                   style='Sub.TLabel').pack(side='top', anchor='e')
         ttk.Label(footer, text='UNIVERSIDAD DE LOS LLANOS',
@@ -357,7 +412,16 @@ class HMMApp:
         hint = ('Izquierdo: dibujar  ·  Derecho: rotar  ·  Rueda: zoom'
                 if mode == '3d' else 'Mantén pulsado para dibujar  ·  Suelta para separar trazos')
         ttk.Label(left, text=hint, style='PanelSub.TLabel').pack(anchor='w', pady=(0, 12))
-        self.canvas = tk.Canvas(left, bg=CANVAS_BG, highlightbackground=LAVENDER, highlightthickness=2, bd=0)
+        # Sombra difuminada en capas; el lienzo conserva sus bindings y lógica.
+        canvas_shadow, canvas_surface = soft_shadow(left, background=CANVAS_BG, offset=9)
+        canvas_shadow.pack(fill='both', expand=True)
+        self.canvas = tk.Canvas(
+            canvas_surface,
+            bg=CANVAS_BG,
+            highlightbackground=LAVENDER,
+            highlightthickness=2,
+            bd=0
+        )
         self.canvas.pack(fill='both', expand=True)
         self.canvas.bind('<Configure>', lambda _: self.redraw())
         self.canvas.bind('<ButtonPress-1>', self.mouse_start)
@@ -386,7 +450,8 @@ class HMMApp:
                   style='PanelSub.TLabel').pack(anchor='w', pady=(0, 3))
         ttk.Label(
             right,
-            text=f'P(letra | observaciones) · T={self.temperatures[mode]:.2f}',
+
+            text=f'P(letra | observaciones)',
             style='PanelSub.TLabel'
         ).pack(anchor='w', pady=(0, 12))
         warning = ('Modelos 3D SINTÉTICOS (no entrenados con trazos 3D reales).'
@@ -662,7 +727,7 @@ class HMMApp:
             )
         for ratio, description in ((.16,'ascendente'),(.38,'altura x'),(.72,'línea base'),(.91,'descendente')):
             y = h*ratio
-            self.canvas.create_line(20,y,w-20,y,fill="#ffa892",dash=(4,6))
+            self.canvas.create_line(20,y,w-20,y,fill="#92e9ff",dash=(4,6))
             self.canvas.create_text(25,y-12,text=description,anchor='w',fill=MUTED,
                                     font=('Segoe UI',9))
         if not self.strokes:
