@@ -1,66 +1,71 @@
 {
-  "dataset": "glifo-dataset-2026-10-31.json",
+  "dataset": "glifo-dataset-2026-11-04.json",
   "mode": "3d",
   "synthetic_3d": true,
-  "train_size": 1291,
-  "test_size": 318,
-  "correct": 264,
-  "accuracy": 0.8301886792452831,
+  "train_size": 2037,
+  "test_size": 617,
+  "correct": 434,
+  "accuracy": 0.7034035656401945,
   "confusions_first_40": [
     {
       "true": "a",
       "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "o",
+      "probability": 0.9985
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 0.9996
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 0.998
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 0.756
+    },
+    {
+      "true": "a",
+      "predicted": "o",
+      "probability": 0.9793
+    },
+    {
+      "true": "a",
+      "predicted": "o",
+      "probability": 0.8806
+    },
+    {
+      "true": "a",
+      "predicted": "q",
       "probability": 0.9999
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 0.8947
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 0.9999
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
     },
     {
       "true": "a",
@@ -69,145 +74,140 @@
     },
     {
       "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
       "predicted": "d",
-      "probability": 0.9985
+      "probability": 0.652
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "j",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "d",
+      "probability": 1.0
+    },
+    {
+      "true": "c",
+      "predicted": "y",
+      "probability": 0.9957
+    },
+    {
+      "true": "c",
+      "predicted": "o",
+      "probability": 0.9998
     },
     {
       "true": "d",
-      "predicted": "q",
+      "predicted": "b",
+      "probability": 0.9964
+    },
+    {
+      "true": "d",
+      "predicted": "j",
       "probability": 1.0
     },
     {
       "true": "d",
-      "predicted": "q",
-      "probability": 1.0
+      "predicted": "a",
+      "probability": 0.999
     },
     {
       "true": "d",
-      "predicted": "q",
+      "predicted": "o",
+      "probability": 0.9942
+    },
+    {
+      "true": "e",
+      "predicted": "g",
+      "probability": 0.7983
+    },
+    {
+      "true": "e",
+      "predicted": "g",
+      "probability": 0.9886
+    },
+    {
+      "true": "f",
+      "predicted": "m",
+      "probability": 0.7201
+    },
+    {
+      "true": "f",
+      "predicted": "e",
       "probability": 1.0
     },
     {
       "true": "f",
-      "predicted": "c",
-      "probability": 1.0
+      "predicted": "p",
+      "probability": 0.8662
     },
     {
       "true": "g",
       "predicted": "o",
-      "probability": 0.9953
+      "probability": 0.8569
     },
     {
-      "true": "h",
-      "predicted": "n",
-      "probability": 0.8102
-    },
-    {
-      "true": "h",
-      "predicted": "m",
-      "probability": 0.9918
-    },
-    {
-      "true": "h",
-      "predicted": "n",
-      "probability": 0.7627
-    },
-    {
-      "true": "h",
-      "predicted": "n",
-      "probability": 0.8532
-    },
-    {
-      "true": "h",
-      "predicted": "n",
-      "probability": 0.9094
-    },
-    {
-      "true": "i",
-      "predicted": "m",
-      "probability": 0.4552
-    },
-    {
-      "true": "l",
-      "predicted": "r",
-      "probability": 0.5036
-    },
-    {
-      "true": "n",
-      "predicted": "m",
-      "probability": 0.5839
-    },
-    {
-      "true": "n",
-      "predicted": "h",
-      "probability": 0.7567
-    },
-    {
-      "true": "n",
-      "predicted": "h",
-      "probability": 0.9997
-    },
-    {
-      "true": "n",
-      "predicted": "h",
-      "probability": 0.9991
-    },
-    {
-      "true": "n",
-      "predicted": "m",
-      "probability": 0.9652
-    },
-    {
-      "true": "n",
-      "predicted": "h",
-      "probability": 0.6685
-    },
-    {
-      "true": "ñ",
-      "predicted": "m",
-      "probability": 0.9602
-    },
-    {
-      "true": "ñ",
-      "predicted": "m",
-      "probability": 0.9961
-    },
-    {
-      "true": "ñ",
-      "predicted": "m",
-      "probability": 0.9569
-    },
-    {
-      "true": "o",
-      "predicted": "g",
-      "probability": 1.0
-    },
-    {
-      "true": "o",
-      "predicted": "b",
-      "probability": 0.9871
-    },
-    {
-      "true": "p",
+      "true": "g",
       "predicted": "q",
-      "probability": 0.9134
+      "probability": 0.8149
     },
     {
-      "true": "p",
+      "true": "g",
       "predicted": "q",
-      "probability": 1.0
+      "probability": 0.9902
     },
     {
-      "true": "p",
-      "predicted": "b",
-      "probability": 1.0
+      "true": "h",
+      "predicted": "m",
+      "probability": 0.8963
     },
     {
-      "true": "p",
-      "predicted": "q",
-      "probability": 0.9993
+      "true": "h",
+      "predicted": "n",
+      "probability": 0.9095
+    },
+    {
+      "true": "h",
+      "predicted": "m",
+      "probability": 0.8152
     }
   ],
-  "elapsed_seconds": 9.74,
+  "elapsed_seconds": 24.97,
   "model_notes": "Evaluación sobre transformaciones sintéticas del mismo dataset 2D, no prueba de generalización 3D real."
 }

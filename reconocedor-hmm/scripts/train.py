@@ -18,7 +18,7 @@ from src.FeatureExtractor import LETTERS, K, extract_2d, extract_3d, map_2d_to_s
 from src.HMMEngine import left_right_model, baum_welch, classify
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DATA = ROOT / 'data/raw/glifo-dataset-2026-11-02.json'
+DEFAULT_DATA = ROOT / 'data/raw/glifo-dataset-2026-11-04.json'
 
 
 def main() -> None:
@@ -31,6 +31,8 @@ def main() -> None:
     parser.add_argument('--states', type=int, default=6)
     parser.add_argument('--sectors', type=int, choices=[8, 16], default=8)
     parser.add_argument('--test-ratio', type=float, default=.2)
+    parser.add_argument('--validation-ratio', type=float, default=.2,
+                    help='Proporción de las muestras restantes para validación')
     parser.add_argument('--out', type=Path, default=None)
     args = parser.parse_args()
     if args.mode == '3d' and not args.synthetic_3d:
@@ -40,6 +42,8 @@ def main() -> None:
         parser.error('--synthetic-3d solo se usa con --mode 3d')
     if not 0 <= args.test_ratio < .5:
         parser.error('test-ratio debe estar en [0, 0.5)')
+    if not 0 < args.validation_ratio < .5:
+        parser.error('validation-ratio debe estar en (0, 0.5)')
     if args.epochs < 1 or args.states < 2:
         parser.error('epochs>=1; states>=2')
     output = args.out or ROOT / 'models' / args.mode
@@ -48,7 +52,7 @@ def main() -> None:
     if set(data) != set(LETTERS):
         raise ValueError(f'Deben existir exactamente las 27 letras. Faltan {set(LETTERS)-set(data)}')
     rng = random.Random(603504)
-    train, test, provenance = {}, {}, {}
+    train, validation, test, provenance = {}, {}, {}, {}
     durations = {}
     for character in LETTERS:
         raw = data[character]
@@ -68,15 +72,27 @@ def main() -> None:
         if len(pairs) < 5:
             raise ValueError(f'Faltan muestras válidas para {character} (solo {len(pairs)})')
         rng.shuffle(pairs)
-        n_test = int(len(pairs)*args.test_ratio)
-        test[character] = [seq for _, seq in pairs[:n_test]]
-        train[character] = [seq for _, seq in pairs[n_test:]]
-        provenance[character] = {'train_indices': [i for i,_ in pairs[n_test:]],
-                                 'test_indices': [i for i,_ in pairs[:n_test]]}
+        n_test = max(1, int(len(pairs) * args.test_ratio)) if args.test_ratio > 0 else 0
+        test_pairs = pairs[:n_test]
+        remaining = pairs[n_test:]
+        n_validation = max(1, int(len(remaining) * args.validation_ratio))
+        validation_pairs = remaining[:n_validation]
+        train_pairs = remaining[n_validation:]
+        if len(train_pairs) < 2:
+            raise ValueError(f'Muestras insuficientes para entrenar {character}')
+        test[character] = [seq for _, seq in test_pairs]
+        validation[character] = [seq for _, seq in validation_pairs]
+        train[character] = [seq for _, seq in train_pairs]
+        provenance[character] = {
+            'train_indices': [i for i, _ in train_pairs],
+            'validation_indices': [i for i, _ in validation_pairs],
+            'test_indices': [i for i, _ in test_pairs]}
     (output / 'split.json').write_text(json.dumps(provenance, ensure_ascii=False, indent=2), encoding='utf-8')
     models = {}
-    print(f'ENTRENAMIENTO {args.mode.upper()} — {sum(map(len,train.values()))} muestras; '
-          f'{sum(map(len,test.values()))} pruebas independientes')
+    print(f'ENTRENAMIENTO {args.mode.upper()} — '
+      f'{sum(map(len, train.values()))} entrenamiento; '
+      f'{sum(map(len, validation.values()))} validación; '
+      f'{sum(map(len, test.values()))} test independientes')
     start = time.perf_counter()
     for i, character in enumerate(LETTERS):
         samples = train[character]
@@ -86,7 +102,9 @@ def main() -> None:
         model.step_units = 10. if args.mode == '2d' else .018
         model.metadata = {'training_mode': args.mode,
                           'source': 'PROYECCION_2D_A_ESFERA_SINTETICA' if args.synthetic_3d else 'TRAZOS_CAPTURADOS',
-                          'train_size': len(samples), 'test_size': len(test[character]),
+                          'train_size': len(samples),
+                            'validation_size': len(validation[character]),
+                            'test_size': len(test[character]),
                           'epochs_requested': args.epochs,
                           'sectors': args.sectors, 'states': args.states,
                           'normalization': '2d: y invertida; 3d: lat/lon radianes',
@@ -99,6 +117,25 @@ def main() -> None:
               f'LL={history[-1]:.1f}', flush=True)
     correct, total = 0, 0
     confusions = []
+    validation_rows = []
+
+    for ch in LETTERS:
+        for seq in validation[ch]:
+            scores = {
+                character: float(model.forward(seq)[2])
+                for character, model in models.items()
+            }
+
+            validation_rows.append({
+                'scores': scores,
+                'label': ch
+            })
+
+    validation_path = output / 'validation_scores.json'
+    validation_path.write_text(
+        json.dumps(validation_rows, ensure_ascii=False, indent=2),
+        encoding='utf-8'
+    )
     for ch in LETTERS:
         for seq in test[ch]:
             ranking = classify(models, seq)

@@ -1,0 +1,6 @@
+{
+  "temperature": 9.241871313081175,
+  "validation_nll": 0.9848089381990304,
+  "validation_samples": 493,
+  "warning": "No evaluar en estas mismas muestras"
+}

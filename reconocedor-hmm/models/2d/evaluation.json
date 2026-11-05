@@ -1,65 +1,15 @@
 {
-  "dataset": "glifo-dataset-2026-10-31.json",
+  "dataset": "glifo-dataset-2026-11-04.json",
   "mode": "2d",
   "synthetic_3d": false,
-  "train_size": 1291,
-  "test_size": 318,
-  "correct": 265,
-  "accuracy": 0.8333333333333334,
+  "train_size": 2037,
+  "test_size": 617,
+  "correct": 402,
+  "accuracy": 0.6515397082658023,
   "confusions_first_40": [
     {
       "true": "a",
       "predicted": "q",
-      "probability": 0.9995
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 0.9997
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 0.8752
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "a",
-      "predicted": "q",
       "probability": 1.0
     },
     {
@@ -70,144 +20,194 @@
     {
       "true": "a",
       "predicted": "o",
-      "probability": 0.8037
+      "probability": 0.9988
+    },
+    {
+      "true": "a",
+      "predicted": "q",
+      "probability": 1.0
+    },
+    {
+      "true": "a",
+      "predicted": "o",
+      "probability": 0.9659
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "p",
+      "probability": 0.8147
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "b",
+      "predicted": "a",
+      "probability": 1.0
     },
     {
       "true": "b",
       "predicted": "d",
-      "probability": 0.9995
+      "probability": 0.9991
+    },
+    {
+      "true": "c",
+      "predicted": "m",
+      "probability": 1.0
+    },
+    {
+      "true": "c",
+      "predicted": "f",
+      "probability": 0.9832
     },
     {
       "true": "d",
-      "predicted": "q",
+      "predicted": "o",
+      "probability": 0.5979
+    },
+    {
+      "true": "d",
+      "predicted": "a",
       "probability": 1.0
     },
     {
       "true": "d",
-      "predicted": "q",
-      "probability": 1.0
+      "predicted": "o",
+      "probability": 0.9789
     },
     {
       "true": "d",
-      "predicted": "q",
+      "predicted": "m",
+      "probability": 0.7605
+    },
+    {
+      "true": "e",
+      "predicted": "o",
+      "probability": 1.0
+    },
+    {
+      "true": "e",
+      "predicted": "a",
+      "probability": 1.0
+    },
+    {
+      "true": "e",
+      "predicted": "o",
+      "probability": 1.0
+    },
+    {
+      "true": "e",
+      "predicted": "a",
       "probability": 1.0
     },
     {
       "true": "f",
-      "predicted": "c",
-      "probability": 1.0
+      "predicted": "p",
+      "probability": 0.9975
     },
     {
       "true": "g",
       "predicted": "o",
-      "probability": 0.521
-    },
-    {
-      "true": "g",
-      "predicted": "o",
-      "probability": 0.9917
-    },
-    {
-      "true": "h",
-      "predicted": "n",
-      "probability": 0.8262
-    },
-    {
-      "true": "h",
-      "predicted": "m",
-      "probability": 0.9912
-    },
-    {
-      "true": "h",
-      "predicted": "m",
-      "probability": 0.6266
-    },
-    {
-      "true": "h",
-      "predicted": "n",
-      "probability": 0.8494
-    },
-    {
-      "true": "h",
-      "predicted": "n",
-      "probability": 0.9232
-    },
-    {
-      "true": "i",
-      "predicted": "m",
-      "probability": 0.4631
-    },
-    {
-      "true": "l",
-      "predicted": "r",
-      "probability": 0.4486
-    },
-    {
-      "true": "n",
-      "predicted": "m",
-      "probability": 0.557
-    },
-    {
-      "true": "n",
-      "predicted": "h",
       "probability": 0.9996
     },
     {
-      "true": "n",
-      "predicted": "h",
-      "probability": 0.9991
+      "true": "g",
+      "predicted": "d",
+      "probability": 1.0
     },
     {
-      "true": "n",
+      "true": "h",
+      "predicted": "n",
+      "probability": 0.846
+    },
+    {
+      "true": "h",
       "predicted": "m",
-      "probability": 0.8559
+      "probability": 0.6447
     },
     {
-      "true": "ñ",
+      "true": "h",
+      "predicted": "n",
+      "probability": 0.7734
+    },
+    {
+      "true": "h",
+      "predicted": "n",
+      "probability": 0.8229
+    },
+    {
+      "true": "h",
       "predicted": "m",
-      "probability": 0.9428
+      "probability": 0.4667
     },
     {
-      "true": "ñ",
+      "true": "h",
+      "predicted": "n",
+      "probability": 0.6414
+    },
+    {
+      "true": "h",
       "predicted": "m",
-      "probability": 0.9548
+      "probability": 0.9926
     },
     {
-      "true": "ñ",
+      "true": "h",
+      "predicted": "n",
+      "probability": 0.9063
+    },
+    {
+      "true": "h",
+      "predicted": "f",
+      "probability": 1.0
+    },
+    {
+      "true": "h",
+      "predicted": "n",
+      "probability": 0.8384
+    },
+    {
+      "true": "h",
       "predicted": "m",
-      "probability": 0.9122
-    },
-    {
-      "true": "o",
-      "predicted": "b",
-      "probability": 0.9568
-    },
-    {
-      "true": "o",
-      "predicted": "g",
       "probability": 1.0
     },
     {
-      "true": "p",
-      "predicted": "q",
-      "probability": 1.0
+      "true": "h",
+      "predicted": "n",
+      "probability": 0.9156
     },
     {
-      "true": "p",
-      "predicted": "q",
-      "probability": 1.0
-    },
-    {
-      "true": "p",
-      "predicted": "b",
-      "probability": 1.0
-    },
-    {
-      "true": "p",
-      "predicted": "q",
-      "probability": 1.0
+      "true": "h",
+      "predicted": "n",
+      "probability": 0.8137
     }
   ],
-  "elapsed_seconds": 9.99,
+  "elapsed_seconds": 62.63,
   "model_notes": "Sin identidad de autores: separación por muestra, posible sesgo de autor."
 }

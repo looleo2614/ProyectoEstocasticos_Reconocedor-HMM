@@ -219,7 +219,8 @@ def baum_welch(model: HMM, sequences: list[list[int]], epochs: int = 8,
                 accum_b[:, k] += gamma[obs == k].sum(axis=0)
         # Reestimación de π a partir de gamma inicial. En la topología
         # izquierda→derecha con arranque forzado, queda [1,0,...,0].
-        model.pi = pi_acc / max(float(pi_acc.sum()), _EPS)
+        model.pi = np.zeros(n, dtype=float)
+        model.pi[0] = 1.0
         for j in range(n):
             row = (accum_a[j] + smoothing * mask[j]) * mask[j]
             model.A[j] = row / max(float(row.sum()), _EPS)

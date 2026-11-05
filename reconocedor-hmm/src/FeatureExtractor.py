@@ -57,6 +57,34 @@ def _length(points: np.ndarray) -> float:
     return float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum())
 
 
+def normalize_strokes_2d(strokes: Sequence, target_size: float = 800.0) -> list[np.ndarray]:
+    #normalización
+    validate_strokes(strokes, 2)
+
+    coords = [
+        np.asarray([p[:2] for p in stroke], dtype=float)
+        for stroke in strokes
+    ]
+
+    all_points = np.vstack(coords)
+
+    min_xy = all_points.min(axis=0)
+    max_xy = all_points.max(axis=0)
+
+    center = (min_xy + max_xy) / 2.0
+    width_height = max_xy - min_xy
+    max_dimension = float(np.max(width_height))
+
+    scale = target_size / max_dimension if max_dimension > EPS else 1.0
+
+    normalized = [
+        (points - center) * scale + 500.0
+        for points in coords
+    ]
+
+    return normalized
+
+
 def _resample(points: np.ndarray, nsteps: int) -> np.ndarray:
     """Remuestreo uniforme en distancia de arco (no por tiempo)."""
     if len(points) < 2:
@@ -82,7 +110,7 @@ def extract_2d(strokes: Sequence, max_steps: int = 64, sectors: int = K, step_un
     if sectors not in (8, 16):
         raise ValueError('Solo K=8 o K=16')
     validate_strokes(strokes, 2)
-    coords = [np.asarray([p[:2] for p in stroke], dtype=float) for stroke in strokes]
+    coords = normalize_strokes_2d(strokes)
     lengths = [_length(p) for p in coords]
     total = sum(lengths)
     result = []

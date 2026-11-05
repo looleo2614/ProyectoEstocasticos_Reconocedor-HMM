@@ -167,6 +167,28 @@ class HMMApp:
         self._style()
         self.models = {'2d': {}, '3d': {}}
         self.warnings = []
+        self.temperatures = {'2d': 1.0, '3d': 1.0}
+        for mode in self.models:
+            calibration_path = ROOT / 'models' / mode / 'calibration.json'
+
+            if calibration_path.is_file():
+                try:
+                    calibration = json.loads(
+                        calibration_path.read_text(encoding='utf-8')
+                    )
+                    temperature = float(calibration['temperature'])
+
+                    if math.isfinite(temperature) and temperature > 0:
+                        self.temperatures[mode] = temperature
+                    else:
+                        self.warnings.append(
+                            f'Temperatura {mode.upper()} inválida; se usará T=1.'
+                        )
+
+                except (OSError, ValueError, KeyError, TypeError) as exc:
+                    self.warnings.append(
+                        f'Calibración {mode.upper()} no cargada: {exc}'
+                    )
         for mode in self.models:
             for c in LETTERS:
                 filename = ROOT / 'models' / mode / f'{c}.json'
@@ -362,8 +384,11 @@ class HMMApp:
                   font=('Segoe UI', 12, 'bold')).pack(anchor='w', pady=(0, 5))
         ttk.Label(right, text='27 letras · Ordenadas de mayor a menor',
                   style='PanelSub.TLabel').pack(anchor='w', pady=(0, 3))
-        ttk.Label(right, text='P(letra | observaciones)',
-                  style='PanelSub.TLabel').pack(anchor='w', pady=(0, 12))
+        ttk.Label(
+            right,
+            text=f'P(letra | observaciones) · T={self.temperatures[mode]:.2f}',
+            style='PanelSub.TLabel'
+        ).pack(anchor='w', pady=(0, 12))
         warning = ('Modelos 3D SINTÉTICOS (no entrenados con trazos 3D reales).'
                    if mode == '3d' and any(m.metadata.get('source') == 'PROYECCION_2D_A_ESFERA_SINTETICA'
                                           for m in self._mode_info.values()) else '')
@@ -557,7 +582,10 @@ class HMMApp:
             else:
                 obs = extract_3d(self.strokes, sectors=8, step_units=.018)
             self.last_observations = obs
-            ranking = classify(self._mode_info, obs)
+            ranking = classify(
+                self._mode_info,
+                obs,
+                temperature=self.temperatures[self.mode])
             self.prediction = ranking
             self._update_rows(ranking)
             best_char = ranking[0][0] if ranking else None
