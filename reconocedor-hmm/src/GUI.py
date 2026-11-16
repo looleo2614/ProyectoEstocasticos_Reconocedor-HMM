@@ -618,8 +618,8 @@ class TracingGuideDialog(tk.Toplevel):
     # modal de Guía de Trazado con cuadrícula, flechas direccionales y pasos
 
     STROKE_COLORS = [
-        "#c81414",  # trazo 1
-        "#5100ff",  # trazo 2
+        "#1478c8",  # trazo 1
+        "#7650c7",  # trazo 2
         "#ce397f",  # trazo 3
         "#80b9c8",  # trazo 4
     ]
