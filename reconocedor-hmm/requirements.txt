@@ -1,2 +1,10 @@
-# Exclusivamente álgebra de matrices. Ninguna biblioteca HMM externa.
-numpy>=1.26,<3
+# Dependencias externas del proyecto: Reconocedor y Clasificador HMM 2D/3D
+# Requiere Python >= 3.10 (probado en Python 3.14 sobre Windows)
+
+numpy>=1.26.0,<3.0.0
+
+# Nota: La interfaz gráfica (tkinter, ctypes), serialización (json),
+# utilidades matemáticas (math) y pruebas unitarias (unittest) utilizan
+# exclusivamente la biblioteca estándar de Python.
+# En distribuciones Linux basadas en Debian/Ubuntu, si tkinter no está preinstalado, ejecute:
+# sudo apt-get install python3-tk

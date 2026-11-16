@@ -31,9 +31,8 @@ from src.HMMEngine import HMM, classify, project_2d, project_3d
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# ---------------------------------------------------------------------------
-# Paleta visual (menta suave, tarjetas blancas, verde azulado y azul marino)
-# ---------------------------------------------------------------------------
+# Paleta de colores
+
 BG = "#dff1ec"              # fondo general menta suave
 BG_HEADER = "#e6f4f0"       # franja superior sutil
 PANEL = "#ffffff"           # superficie de tarjetas
@@ -62,16 +61,15 @@ BTN_BORDER = "#cfe0db"      # borde botones secundarios
 TEXT = "#172536"            # texto principal
 MUTED = "#5e716d"           # texto secundario
 
-# Orden alfabético español completo (27 letras) para la barra inferior
+#(27 letras) para la barra inferior
+
 SPANISH_ALPHABET = [
     "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
     "ñ", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
 ]
 
-# ---------------------------------------------------------------------------
-# Guías vectoriales de trazado óptimo para las 27 letras minúsculas
-# Coordenadas normalizadas en [0, 1] x [0, 1]; cada lista es un trazo ordenado.
-# ---------------------------------------------------------------------------
+# guías vectoriales de trazado óptimo para las 27 letras minúsculas
+
 TRACING_GUIDES: dict[str, list[list[tuple[float, float]]]] = {
     "a": [
         [
@@ -210,6 +208,7 @@ TRACING_GUIDES: dict[str, list[list[tuple[float, float]]]] = {
             (0.65, 0.61),
         ],
         [(0.66, 0.36), (0.66, 0.62), (0.66, 0.88)],
+        [(0.55, 0.78), (0.66, 0.78), (0.77, 0.78)],
     ],
     "r": [
         [(0.38, 0.36), (0.38, 0.55), (0.38, 0.74)],
@@ -259,10 +258,8 @@ TRACING_GUIDES: dict[str, list[list[tuple[float, float]]]] = {
     ],
 }
 
+# utilidades de dibujo vectorial en Canvas
 
-# ---------------------------------------------------------------------------
-# Utilidades de dibujo vectorial en Canvas
-# ---------------------------------------------------------------------------
 def draw_rounded_rect(
     canvas: tk.Canvas,
     x1: float,
@@ -275,7 +272,7 @@ def draw_rounded_rect(
     width: int = 1,
     tags: str | tuple[str, ...] | None = None,
 ):
-    """Dibuja un rectángulo con esquinas suaves en un Canvas Tkinter."""
+    # rectángulo con esquinas suaves 
     w = max(0.0, x2 - x1)
     h = max(0.0, y2 - y1)
     if w < 1 or h < 1:
@@ -307,7 +304,7 @@ def draw_rounded_rect(
 
 
 def load_bundled_fonts() -> list[str]:
-    """Carga fuentes privadas (.ttf/.otf) desde assets/fonts en Windows (compatible 64-bit)."""
+    # carga las fuentes utilizadas
     if sys.platform != "win32":
         return []
     fonts_dir = ROOT / "assets" / "fonts"
@@ -335,7 +332,7 @@ def load_bundled_fonts() -> list[str]:
 
 
 def draw_wave_mark(canvas: tk.Canvas, cx: float, cy: float, scale: float = 1.0):
-    """Dibuja el isotipo de onda HMM (marino + acento cian)."""
+    # dibuja el isotipo de onda HMM
     pts_main = [
         (cx - 24 * scale, cy + 5 * scale),
         (cx - 16 * scale, cy - 12 * scale),
@@ -366,12 +363,10 @@ def draw_wave_mark(canvas: tk.Canvas, cx: float, cy: float, scale: float = 1.0):
         capstyle="round",
     )
 
+# componentes reutilizables de interfaz
 
-# ---------------------------------------------------------------------------
-# Componentes reutilizables de interfaz
-# ---------------------------------------------------------------------------
 class RoundedCard(tk.Frame):
-    """Tarjeta blanca con esquinas redondeadas, borde fino y sombra suave."""
+    # tarjeta blanca con esquinas redondeadas, borde fino y sombra suave
 
     def __init__(
         self,
@@ -437,7 +432,7 @@ class RoundedCard(tk.Frame):
 
 
 class ActionButton(tk.Canvas):
-    """Botón redondeado con icono vectorial opcional y efecto hover."""
+    # botón redondeado 
 
     def __init__(
         self,
@@ -544,7 +539,7 @@ class ActionButton(tk.Canvas):
 
 
 class ModeSwitch(tk.Canvas):
-    """Selector segmentado [ 2D | 3D ] igual a la barra superior del lienzo."""
+    # selector segmentado [ 2D | 3D ] 
 
     def __init__(self, master, on_change, initial: str = "2d", parent_bg: str = PANEL):
         super().__init__(
@@ -590,10 +585,8 @@ class ModeSwitch(tk.Canvas):
             self.create_text(27, h / 2, text="2D", fill=MUTED, font=("Segoe UI", 9, "bold"))
             self.create_text(77, h / 2, text="3D", fill="#ffffff", font=("Segoe UI", 9, "bold"))
 
+# cámara sobre esfera para modo 3D
 
-# ---------------------------------------------------------------------------
-# Cámara ortográfica sobre esfera unidad para modo 3D
-# ---------------------------------------------------------------------------
 class SphereCamera:
     def __init__(self):
         self.yaw, self.pitch, self.zoom = 0.0, 0.0, 1.0
@@ -618,28 +611,34 @@ class SphereCamera:
         return (self.matrix().T @ camera_p).tolist()
 
 
-# ---------------------------------------------------------------------------
-# Ventana emergente: Guía de Trazado de Caracteres
-# ---------------------------------------------------------------------------
+
+# ventana emergente: guía de trazado
+
 class TracingGuideDialog(tk.Toplevel):
-    """Modal idéntico a la captura de Guía de Trazado con cuadrícula, flechas y pasos."""
+    # modal de Guía de Trazado con cuadrícula, flechas direccionales y pasos
+
+    STROKE_COLORS = [
+        "#1478c8",  # trazo 1
+        "#7650c7",  # trazo 2
+        "#ce397f",  # trazo 3
+        "#80b9c8",  # trazo 4
+    ]
 
     def __init__(self, parent: tk.Tk, char: str, font_getter):
         super().__init__(parent)
         self.char = char.lower()
         self._font_getter = font_getter
-        # Selawik para toda la interfaz y Playwrite AR para la letra de muestra.
+        self._canvas_size = 360
         self.font_ui = ("Selawik", 10, "normal")
         self.font_ui_bold = ("Selawik", 10, "bold")
         self.font_title = ("Selawik", 12, "bold")
-        self.font_letter = ("Playwrite AR", 17, "normal")
+        self.font_letter = self._font_getter(self.char, size=17)
+
         self.title(f'Guía de Trazado: Letra "{self.char}"')
         self.configure(bg=PANEL)
         self.resizable(False, False)
         self.transient(parent)
-        self.grab_set()
 
-        # Barra superior del modal con icono de lápiz, título y botón X
         header = tk.Frame(self, bg="#eef6f4", height=44)
         header.pack(fill="x")
         header.pack_propagate(False)
@@ -648,17 +647,17 @@ class TracingGuideDialog(tk.Toplevel):
         icon_c.pack(side="left", padx=(14, 4), pady=8)
         self._draw_pencil_icon(icon_c, 14, 14, TEAL)
 
-        tk.Label(
+        self.header_label = tk.Label(
             header,
             text=f'Guía de Trazado: Letra "{self.char}"',
             bg="#eef6f4",
             fg=TEXT,
             font=self.font_title,
-        ).pack(side="left", pady=8)
+        )
+        self.header_label.pack(side="left", pady=8)
 
         tk.Frame(self, bg="#d9e7e3", height=1).pack(fill="x")
 
-        # Subtítulo superior con muestra tipográfica en minúscula (Playwrite AR / Selawik)
         sub_row = tk.Frame(self, bg=PANEL)
         sub_row.pack(pady=(12, 10))
 
@@ -670,42 +669,40 @@ class TracingGuideDialog(tk.Toplevel):
             font=self.font_ui_bold,
         ).pack(side="left")
 
-        tk.Label(
+        self.badge_label = tk.Label(
             sub_row,
-            text=f" {self.char.lower()} ",
+            text=f" {self.char} ",
             bg=TEAL_LIGHT,
             fg=TEAL,
             font=self.font_letter,
             padx=6,
             pady=0,
-        ).pack(side="left", padx=(2, 0))
+        )
+        self.badge_label.pack(side="left", padx=(2, 0))
 
-        # Cuadrícula de trazado (360 x 360)
         grid_wrap = tk.Frame(self, bg="#d4e0dc", padx=1, pady=1)
         grid_wrap.pack(padx=22)
 
-        size = 360
         self.grid_canvas = tk.Canvas(
             grid_wrap,
-            width=size,
-            height=size,
+            width=self._canvas_size,
+            height=self._canvas_size,
             bg="#ffffff",
             highlightthickness=0,
             bd=0,
         )
         self.grid_canvas.pack()
-        self._render_guide(size)
+        self._render_guide(self._canvas_size)
 
-        # Texto instructivo inferior
-        tk.Label(
+        self.hint_label = tk.Label(
             self,
             text=f"Siga los números y las flechas para un trazado óptimo de '{self.char}'.",
             bg=PANEL,
             fg=TEXT,
             font=self.font_ui,
-        ).pack(pady=(14, 14))
+        )
+        self.hint_label.pack(pady=(14, 14))
 
-        # Botón Cerrar centrado
         btn = ActionButton(
             self,
             text="Cerrar",
@@ -721,6 +718,18 @@ class TracingGuideDialog(tk.Toplevel):
 
         self.bind("<Escape>", lambda _e: self.destroy())
         self._center_on_parent(parent)
+
+    def set_char(self, char: str):
+        # actualiza la ventana reutilizada al seleccionar otra letra
+        self.char = char.lower()
+        self.font_letter = self._font_getter(self.char, size=17)
+        self.title(f'Guía de Trazado: Letra "{self.char}"')
+        self.header_label.configure(text=f'Guía de Trazado: Letra "{self.char}"')
+        self.badge_label.configure(text=f" {self.char} ", font=self.font_letter)
+        self.hint_label.configure(
+            text=f"Siga los números y las flechas para un trazado óptimo de '{self.char}'."
+        )
+        self._render_guide(self._canvas_size)
 
     def _center_on_parent(self, parent: tk.Tk):
         self.update_idletasks()
@@ -746,9 +755,25 @@ class TracingGuideDialog(tk.Toplevel):
             fill=color, width=2, capstyle="round"
         )
 
+    @staticmethod
+    def _draw_step_badge(c: tk.Canvas, cx: float, cy: float, step: int, color: str):
+        # dibuja un círculo relleno con el número del trazo centrado
+        r = 13.0
+        c.create_oval(
+            cx - r, cy - r, cx + r, cy + r,
+            fill=color, outline="#ffffff", width=2,
+        )
+        c.create_text(
+            cx, cy,
+            text=str(step),
+            fill="#ffffff",
+            font=("Selawik", 11, "bold"),
+        )
+
     def _render_guide(self, size: int):
         c = self.grid_canvas
-        step = 20  # 18x18 celdas
+        c.delete("all")
+        step = 20
         for pos in range(step, size, step):
             c.create_line(pos, 0, pos, size, fill="#e4ece9", width=1)
             c.create_line(0, pos, size, pos, fill="#e4ece9", width=1)
@@ -760,7 +785,7 @@ class TracingGuideDialog(tk.Toplevel):
         def to_px(pt: tuple[float, float]) -> tuple[float, float]:
             return (pad + pt[0] * span, pad + pt[1] * span)
 
-        # 1. Trazos principales gruesos en negro con extremos redondeados
+        # 1. Trazos base de la letra
         for stroke in strokes:
             px_pts = [to_px(p) for p in stroke]
             if len(px_pts) > 1:
@@ -777,8 +802,11 @@ class TracingGuideDialog(tk.Toplevel):
                 x0, y0 = px_pts[0]
                 c.create_oval(x0 - 5, y0 - 5, x0 + 5, y0 + 5, fill="#0d1112", outline="")
 
-        # 2. Flechas direccionales paralelas, puntos iniciales cian y números (1), (2)...
+        badges_to_draw: list[tuple[float, float, int, str]] = []
+
+        # 2. Líneas punteadas, flechas y puntos de inicio con el color de cada trazo
         for idx, stroke in enumerate(strokes, start=1):
+            color = self.STROKE_COLORS[(idx - 1) % len(self.STROKE_COLORS)]
             px_pts = [to_px(p) for p in stroke]
             sx, sy = px_pts[0]
 
@@ -787,39 +815,35 @@ class TracingGuideDialog(tk.Toplevel):
                 if len(guide_pts) >= 2:
                     c.create_line(
                         *(v for xy in guide_pts for v in xy),
-                        fill="#9ba5a3",
+                        fill=color,
                         width=3,
                         smooth=True,
                         arrow=tk.LAST,
                         arrowshape=(11, 13, 5),
                         capstyle="round",
+                        dash=(6, 3),
                     )
                     lbl_idx = min(len(guide_pts) - 1, max(0, len(guide_pts) // 3))
                     lx, ly = guide_pts[lbl_idx]
                     vx, vy = lx - size / 2, ly - size / 2
                     norm = math.hypot(vx, vy) or 1.0
-                    lx = max(24, min(size - 24, lx + (vx / norm) * 16))
+                    lx = max(22, min(size - 22, lx + (vx / norm) * 16))
                     ly = max(22, min(size - 22, ly + (vy / norm) * 16))
-                    c.create_text(
-                        lx, ly,
-                        text=f"({idx})",
-                        fill="#111617",
-                        font=("Selawik", 14, "normal"),
-                    )
+                    badges_to_draw.append((lx, ly, idx, color))
             else:
-                c.create_text(
-                    min(size - 26, sx + 24),
-                    max(22, sy - 6),
-                    text=f"({idx})",
-                    fill="#111617",
-                    font=("Selawik", 14, "normal"),
-                )
+                bx = min(size - 24, sx + 24)
+                by = max(22, sy - 6)
+                badges_to_draw.append((bx, by, idx, color))
 
             r = 8.5
             c.create_oval(
                 sx - r, sy - r, sx + r, sy + r,
-                fill=CYAN, outline="#ffffff", width=1
+                fill=color, outline="#ffffff", width=1.5,
             )
+
+        # 3. Círculos numerados al frente
+        for bx, by, idx, color in badges_to_draw:
+            self._draw_step_badge(c, bx, by, idx, color)
 
     @staticmethod
     def _offset_guide_curve(
@@ -857,10 +881,8 @@ class TracingGuideDialog(tk.Toplevel):
             for x, y in chosen
         ]
 
+# aplicación principal HMM 2D / 3D
 
-# ---------------------------------------------------------------------------
-# Aplicación principal HMM 2D / 3D
-# ---------------------------------------------------------------------------
 class HMMApp:
     def __init__(self):
         self._private_fonts = load_bundled_fonts()
@@ -870,7 +892,7 @@ class HMMApp:
         self.root.minsize(1060, 660)
         self.root.configure(bg=BG)
 
-        # Carga de modelos HMM y temperaturas de calibración (lógica intacta)
+        # carga de modelos HMM y temperaturas de calibración
         self.models: dict[str, dict[str, HMM]] = {"2d": {}, "3d": {}}
         self.warnings: list[str] = []
         self.temperatures = {"2d": 1.0, "3d": 1.0}
@@ -903,19 +925,21 @@ class HMMApp:
 
         self.dataset_count = self._count_dataset_samples()
 
-        # Estado interactivo del lienzo e inferencia
+        # estado interactivo del lienzo e inferencia
         self.mode = "2d"
         self._mode_info = self.models["2d"]
         self.strokes: list[list[list[float]]] = []
         self.prediction: list[tuple[str, float, float]] = []
-        self.future: list[list[float]] = []
+        self.future: list = []
         self.sphere = SphereCamera()
         self.drag_rotate: tuple[int, int] | None = None
         self._inference_id: str | None = None
+        self._guide_dialog: TracingGuideDialog | None = None
+        self._is_drawing: bool = False
         self.last_observations: list[int] = []
         self.start_time = time.monotonic()
 
-        # Referencias a widgets actualizables
+        # referencias a widgets actualizables
         self.canvas: tk.Canvas | None = None
         self.tab_canvas: tk.Canvas | None = None
         self.mode_switch: ModeSwitch | None = None
@@ -936,7 +960,7 @@ class HMMApp:
         self.redraw()
 
     def _count_dataset_samples(self) -> int:
-        path = ROOT / "data/raw/glifo-dataset-2026-10-31.json"
+        path = ROOT / "data/raw/glifo-dataset-2026-11-04.json"
         if not path.is_file():
             return 2700
         try:
@@ -954,11 +978,10 @@ class HMMApp:
         family = "Playwrite AR" if ch in ("a", "q") else "Selawik"
         return (family, int(size), "bold" if bold else "normal")
 
-    # -----------------------------------------------------------------------
-    # Construcción de la interfaz principal
-    # -----------------------------------------------------------------------
+    
+    # interfaz principal
+    
     def _build_ui(self):
-        # 1. Franja de encabezado superior
         header = tk.Frame(self.root, bg=BG_HEADER, height=58)
         header.pack(fill="x", side="top")
         header.pack_propagate(False)
@@ -989,7 +1012,6 @@ class HMMApp:
             font=("Segoe UI", 9),
         ).pack(anchor="w")
 
-        # Derecha del encabezado: píldora Dataset: 2,700 muestras
         badge_canvas = tk.Canvas(
             header, width=192, height=34, bg=BG_HEADER, highlightthickness=0
         )
@@ -1018,43 +1040,36 @@ class HMMApp:
             font=("Segoe UI", 9, "bold"),
         )
 
-        # Línea divisoria sutil debajo del header
         tk.Frame(self.root, bg="#cfe4de", height=1).pack(fill="x")
 
-        # 2. Contenedor principal (3 columnas arriba + barra inferior de guías)
         workspace = tk.Frame(self.root, bg=BG)
         workspace.pack(fill="both", expand=True, padx=16, pady=(12, 14))
 
-        # --- BARRA INFERIOR: Guía de Trazado de Caracteres (27 letras) ---
         bottom_card = RoundedCard(workspace, padding=12, radius=16, height=96)
         bottom_card.pack(side="bottom", fill="x", pady=(10, 0))
         bottom_card.pack_propagate(False)
         self._build_bottom_guide_bar(bottom_card.content)
 
-        # --- ÁREA CENTRAL DE 3 COLUMNAS ---
         columns = tk.Frame(workspace, bg=BG)
         columns.pack(side="top", fill="both", expand=True)
 
-        # COLUMNA IZQUIERDA (Marca HMM + Tarjeta Leyenda de Trayectoria)
         left_col = tk.Frame(columns, bg=BG, width=215)
         left_col.pack(side="left", fill="y", padx=(0, 12))
         left_col.pack_propagate(False)
         self._build_left_column(left_col)
 
-        # COLUMNA DERECHA (Tarjeta Predicción + Tarjeta Probabilidades 27 letras)
         right_col = tk.Frame(columns, bg=BG, width=335)
         right_col.pack(side="right", fill="y", padx=(12, 0))
         right_col.pack_propagate(False)
         self._build_right_column(right_col)
 
-        # COLUMNA CENTRAL (Tarjeta principal con pestaña Dibujo 2D/3D, cuadrícula y botones)
         center_card = RoundedCard(columns, padding=14, radius=16)
         center_card.pack(side="left", fill="both", expand=True)
         self._build_center_column(center_card.content)
 
-    # -----------------------------------------------------------------------
-    # Columna Izquierda: Marca HMM + Leyenda de Trayectoria
-    # -----------------------------------------------------------------------
+    
+    # marca HMM + Leyenda de Trayectoria
+    
     def _build_left_column(self, parent: tk.Frame):
         brand_box = tk.Frame(parent, bg=BG)
         brand_box.pack(fill="x", pady=(4, 14))
@@ -1083,7 +1098,6 @@ class HMMApp:
             justify="center",
         ).pack(pady=(2, 0))
 
-        # Tarjeta Leyenda de Trayectoria
         legend_card = RoundedCard(parent, padding=14, radius=16)
         legend_card.pack(fill="x")
         leg = legend_card.content
@@ -1128,7 +1142,6 @@ class HMMApp:
                 font=("Segoe UI", 10),
             ).pack(side="left")
 
-        # Controles adicionales discretos solo visibles cuando se activa el modo 3D
         self.hint_3d_frame = tk.Frame(leg, bg=PANEL)
         tk.Frame(self.hint_3d_frame, bg="#e5efec", height=1).pack(fill="x", pady=(10, 8))
         tk.Label(
@@ -1150,21 +1163,19 @@ class HMMApp:
             parent_bg=PANEL,
         ).pack(anchor="w")
 
-    # -----------------------------------------------------------------------
-    # Columna Central: Pestaña Dibujo 2D/3D, Cuadrícula y Botones Limpiar/Deshacer
-    # -----------------------------------------------------------------------
+    
+    # pestaña dibujo 2D/3D, cuadrícula y botones Limpiar/Deshacer
+    
     def _build_center_column(self, parent: tk.Frame):
         top_bar = tk.Frame(parent, bg=PANEL)
         top_bar.pack(fill="x", pady=(0, 8))
 
-        # Pestaña izquierda: Dibujo (2D) / Esfera (3D)
         self.tab_canvas = tk.Canvas(
             top_bar, width=148, height=34, bg=PANEL, highlightthickness=0
         )
         self.tab_canvas.pack(side="left")
         self._render_mode_tab()
 
-        # Selector derecho: Modo: [ 2D | 3D ]
         right_switch = tk.Frame(top_bar, bg=PANEL)
         right_switch.pack(side="right")
 
@@ -1181,7 +1192,6 @@ class HMMApp:
         )
         self.mode_switch.pack(side="left")
 
-        # Contenedor con borde fino para el lienzo cuadriculado
         canvas_frame = tk.Frame(parent, bg="#d7e6e1", padx=1, pady=1)
         canvas_frame.pack(fill="both", expand=True)
 
@@ -1203,21 +1213,12 @@ class HMMApp:
         self.canvas.bind("<Button-4>", lambda _e: self.zoom_by(1.08))
         self.canvas.bind("<Button-5>", lambda _e: self.zoom_by(1 / 1.08))
 
-        # Barra inferior del lienzo: icono lápiz + Limpiar + Deshacer
         footer_bar = tk.Frame(parent, bg=PANEL)
         footer_bar.pack(fill="x", pady=(10, 0))
 
-        # Insignia cuadrada verde azulado con lápiz a la izquierda
-        pen_badge = tk.Canvas(
-            footer_bar, width=36, height=36, bg=PANEL, highlightthickness=0
-        )
-        pen_badge.pack(side="left")
-        draw_rounded_rect(pen_badge, 1, 1, 35, 35, 9, fill=TEAL, outline=TEAL)
-        TracingGuideDialog._draw_pencil_icon(pen_badge, 18, 18, "#ffffff")
-
-        # Botones centrados Limpiar y Deshacer
         center_btns = tk.Frame(footer_bar, bg=PANEL)
         center_btns.pack(side="left", expand=True)
+        center_btns.pack(fill="x", anchor="w")
 
         ActionButton(
             center_btns,
@@ -1229,7 +1230,7 @@ class HMMApp:
             height=36,
             radius=10,
             parent_bg=PANEL,
-        ).pack(side="left", padx=(0, 12))
+        ).pack(side="left", padx=(0, 12), anchor="w")
 
         ActionButton(
             center_btns,
@@ -1241,7 +1242,7 @@ class HMMApp:
             height=36,
             radius=10,
             parent_bg=PANEL,
-        ).pack(side="left")
+        ).pack(side="left", anchor="w")
 
         self.status_label = tk.Label(
             footer_bar,
@@ -1258,18 +1259,15 @@ class HMMApp:
         c = self.tab_canvas
         c.delete("all")
         draw_rounded_rect(c, 0, 1, 146, 33, 9, fill=TEAL, outline=TEAL)
-        TracingGuideDialog._draw_pencil_icon(c, 22, 17, "#ffffff")
         label = "Dibujo (2D)" if self.mode == "2d" else "Esfera (3D)"
         c.create_text(
             38, 17, text=label, anchor="w",
             fill="#ffffff", font=("Segoe UI", 10, "bold")
         )
 
-    # -----------------------------------------------------------------------
-    # Columna Derecha: Tarjeta Predicción + Tarjeta Probabilidades (27 letras)
-    # -----------------------------------------------------------------------
+    # tarjeta predicción + tarjeta probabilidades (27 letras)
+    
     def _build_right_column(self, parent: tk.Frame):
-        # 1. Tarjeta superior: Predicción
         pred_card = RoundedCard(parent, padding=14, radius=16, height=132)
         pred_card.pack(side="top", fill="x", pady=(0, 10))
         pred_card.pack_propagate(False)
@@ -1294,7 +1292,6 @@ class HMMApp:
         p_body = tk.Frame(p_box, bg=PANEL)
         p_body.pack(fill="both", expand=True)
 
-        # Cuadro verde azulado grande con el carácter predicho
         self.pred_badge_canvas = tk.Canvas(
             p_body, width=68, height=58, bg=PANEL, highlightthickness=0
         )
@@ -1332,7 +1329,6 @@ class HMMApp:
             lambda _e: self._draw_confidence_bar(self._current_confidence),
         )
 
-        # 2. Tarjeta inferior: Probabilidades (27 letras)
         prob_card = RoundedCard(parent, padding=14, radius=16)
         prob_card.pack(side="top", fill="both", expand=True)
         pr_box = prob_card.content
@@ -1356,7 +1352,6 @@ class HMMApp:
 
         tk.Frame(pr_box, bg="#e5efec", height=1).pack(fill="x", pady=(0, 6))
 
-        # Contenedor desplazable para las 27 filas de probabilidad
         scroll_wrap = tk.Frame(pr_box, bg=PANEL)
         scroll_wrap.pack(fill="both", expand=True)
 
@@ -1394,6 +1389,7 @@ class HMMApp:
             widget.bind("<Leave>", lambda _e: self._unbind_prob_scroll())
 
         self.prob_rows = []
+
         for idx in range(len(LETTERS)):
             row = tk.Frame(self._prob_inner, bg=PANEL, height=23)
             row.pack(fill="x", pady=1)
@@ -1410,23 +1406,29 @@ class HMMApp:
             )
             lbl_char.pack(side="left", padx=(2, 6))
 
-            bar_c = tk.Canvas(row, height=11, bg=PANEL, highlightthickness=0)
-            bar_c.pack(side="left", fill="x", expand=True, padx=(0, 8))
-            bar_c.bind(
-                "<Configure>",
-                lambda _e, row_idx=idx: self._redraw_single_prob_bar(row_idx),
-            )
-
             lbl_pct = tk.Label(
                 row,
-                text="0.0 %",
-                width=6,
+                text="0.00 %",
+                width=7,
                 anchor="e",
                 bg=PANEL,
                 fg=MUTED,
                 font=("Segoe UI", 9, "bold"),
             )
-            lbl_pct.pack(side="right", padx=(0, 4))
+            lbl_pct.pack(side="right", padx=(4, 4))
+
+            bar_c = tk.Canvas(
+                row,
+                height=11,
+                bg=PANEL,
+                highlightthickness=0,
+            )
+            bar_c.pack(side="left", fill="x", expand=True, padx=(0, 4))
+
+            bar_c.bind(
+                "<Configure>",
+                lambda _e, row_idx=idx: self._redraw_single_prob_bar(row_idx),
+            )
 
             self.prob_rows.append((lbl_char, bar_c, lbl_pct))
 
@@ -1452,9 +1454,8 @@ class HMMApp:
         )
         self._prob_canvas.yview_scroll(int(step), "units")
 
-    # -----------------------------------------------------------------------
-    # Barra Inferior: Guía de Trazado de Caracteres (las 27 letras)
-    # -----------------------------------------------------------------------
+    # guía de Trazado de Caracteres (las 27 letras)
+    
     def _build_bottom_guide_bar(self, parent: tk.Frame):
         left_info = tk.Frame(parent, bg=PANEL, width=370)
         left_info.pack(side="left", fill="y", padx=(4, 16))
@@ -1486,7 +1487,6 @@ class HMMApp:
             justify="left",
         ).pack(anchor="w")
 
-        # Cuadrícula derecha con las 27 letras del abecedario (14 arriba, 13 abajo)
         tiles_grid = tk.Frame(parent, bg=PANEL)
         tiles_grid.pack(side="right", fill="both", expand=True)
 
@@ -1542,11 +1542,15 @@ class HMMApp:
         tile.bind("<Button-1>", lambda _e, ch=letter: self.open_tracing_guide(ch))
 
     def open_tracing_guide(self, char: str):
-        TracingGuideDialog(self.root, char, self._letter_font)
+        if self._guide_dialog is not None and self._guide_dialog.winfo_exists():
+            self._guide_dialog.set_char(char)
+            self._guide_dialog.deiconify()
+            self._guide_dialog.lift()
+            return
+        self._guide_dialog = TracingGuideDialog(self.root, char, self._letter_font)
 
-    # -----------------------------------------------------------------------
-    # Cambio de modo 2D / 3D y acciones de dibujo
-    # -----------------------------------------------------------------------
+    # cambio de modo 2D / 3D y acciones de dibujo
+    
     def switch_mode(self, new_mode: str):
         if new_mode not in ("2d", "3d") or new_mode == self.mode:
             return
@@ -1568,6 +1572,7 @@ class HMMApp:
         if self._inference_id is not None:
             self.root.after_cancel(self._inference_id)
             self._inference_id = None
+        self._is_drawing = False
         self.strokes = []
         self.future = []
         self.prediction = []
@@ -1579,6 +1584,7 @@ class HMMApp:
         """Elimina el último trazo dibujado y recalcula la predicción HMM."""
         if not self.strokes:
             return
+        self._is_drawing = False
         self.strokes.pop()
         if not self.strokes:
             self.clear_canvas()
@@ -1591,9 +1597,8 @@ class HMMApp:
         self.sphere = SphereCamera()
         self.redraw()
 
-    # -----------------------------------------------------------------------
-    # Captura de eventos del ratón en el lienzo 2D / 3D
-    # -----------------------------------------------------------------------
+    # captura de eventos del ratón en el lienzo 2D / 3D
+
     def _sphere_dimensions(self):
         w = max(int(self.canvas.winfo_width()), 2)
         h = max(int(self.canvas.winfo_height()), 2)
@@ -1619,8 +1624,10 @@ class HMMApp:
         p = self._point_from_event(event)
         if p is None:
             return
+        self._is_drawing = True
         self.strokes.append([p])
         self.redraw()
+        self.schedule_inference()
 
     def mouse_move(self, event):
         if not self.strokes:
@@ -1636,12 +1643,17 @@ class HMMApp:
         )
         if dist < 3.0:
             return
+        self._is_drawing = True
         self.strokes[-1].append(p)
         self.redraw()
         self.schedule_inference()
 
     def mouse_finish(self, _event):
-        self.schedule_inference()
+        self._is_drawing = False
+        if self._inference_id is not None:
+            self.root.after_cancel(self._inference_id)
+            self._inference_id = None
+        self.run_inference()
 
     def rotate_start(self, event):
         self.drag_rotate = (event.x, event.y)
@@ -1664,9 +1676,156 @@ class HMMApp:
         if self.mode == "3d":
             self.zoom_by(1.08 if event.delta > 0 else 1 / 1.08)
 
-    # -----------------------------------------------------------------------
-    # Inferencia HMM en tiempo real
-    # -----------------------------------------------------------------------
+    # clasificación bayesiana sensible a trazos terminados y continuaciones
+    
+    @staticmethod
+    def _stroke_priors_for(
+        char: str, model: HMM
+    ) -> tuple[dict[int, float], dict[int, float], float]:
+        # combina priors empíricos de trazos con la estructura canónica de la letra
+        ch = char.lower()
+        canonical = len(TRACING_GUIDES.get(ch, [[(0.0, 0.0)]]))
+        meta = getattr(model, "metadata", None) or {}
+        raw_probs = meta.get("stroke_count_probs") if isinstance(meta, dict) else None
+
+        emp: dict[int, float] = {}
+        if isinstance(raw_probs, dict) and raw_probs:
+            for k_str, v in raw_probs.items():
+                try:
+                    emp[int(k_str)] = float(v)
+                except (TypeError, ValueError):
+                    pass
+
+        s_probs: dict[int, float] = {}
+        for k in (1, 2, 3, 4):
+            if ch == "q":
+                cp = 0.56 if k == 2 else (0.36 if k == 3 else 0.04)
+            else:
+                cp = 0.92 if k == canonical else (0.04 if abs(k - canonical) == 1 else 0.01)
+            ep = emp.get(k, cp if emp else cp)
+            s_probs[k] = (0.60 * ep + 0.40 * cp) if emp else cp
+        tot = sum(s_probs.values()) or 1.0
+        s_probs = {k: v / tot for k, v in s_probs.items()}
+
+        len_map: dict[int, float] = {}
+        raw_lens = meta.get("length_by_strokes") if isinstance(meta, dict) else None
+        if isinstance(raw_lens, dict):
+            for k_str, v in raw_lens.items():
+                try:
+                    len_map[int(k_str)] = float(v)
+                except (TypeError, ValueError):
+                    pass
+
+        base_len = max(8.0, float(getattr(model, "median_length", 22) or 22))
+        for k in (1, 2, 3, 4):
+            if k not in len_map:
+                len_map[k] = base_len * (0.88 + 0.12 * (k / max(canonical, 1)))
+
+        return s_probs, len_map, base_len
+
+    def _classify_with_stroke_context(
+        self, obs: list[int]
+    ) -> list[tuple[str, float, float]]:
+        # evalúa cada letra considerando si los trazos actuales la completan o son un prefijo
+        models = self._mode_info
+        if not models:
+            return []
+
+        obs_len = max(1, len(obs))
+        dragged_strokes = sum(1 for st in self.strokes if len(st) >= 2)
+        total_strokes = len(self.strokes)
+        is_drawing = self._is_drawing
+
+        adjusted_scores: dict[str, float] = {}
+        raw_scores: dict[str, float] = {}
+
+        for ch, model in models.items():
+            raw_ll = float(model.forward(obs)[2])
+            raw_scores[ch] = raw_ll
+
+            # para 'i' y 'j' un punto (1 coordenada) cuenta como trazo válido (el punto superior)
+            s_obs = max(
+                1,
+                total_strokes if ch in ("i", "j") else (dragged_strokes or total_strokes),
+            )
+            s_probs, len_map, med_len = self._stroke_priors_for(ch, model)
+
+            try:
+                gamma_last = model.posterior(obs)[-1]
+                prog = float(
+                    (gamma_last @ np.arange(model.states, dtype=float))
+                    / max(model.states - 1, 1)
+                )
+            except Exception:
+                prog = min(1.0, obs_len / max(med_len, 1.0))
+
+            # hipótesis 1: la letra YA ESTÁ COMPLETA con s_obs trazos
+            p_complete_prior = s_probs.get(s_obs, 0.01)
+            expected_complete_len = max(6.0, float(len_map.get(s_obs, med_len)))
+            len_ratio = obs_len / expected_complete_len
+            if len_ratio < 0.76:
+                len_fit = math.exp(-3.5 * ((0.76 - len_ratio) ** 2) / 0.14)
+            elif len_ratio > 1.48:
+                len_fit = math.exp(-1.5 * ((len_ratio - 1.48) ** 2) / 0.25)
+            else:
+                len_fit = 1.0
+
+            state_end_fit = math.exp(-2.5 * (max(0.0, 0.80 - prog) ** 2) / 0.12)
+            complete_weight = (
+                (0.55 if is_drawing else 1.0)
+                * p_complete_prior
+                * len_fit
+                * state_end_fit
+            )
+
+            # hipótesis 2: letra INCOMPLETA que coincide como prefijo y le faltan trazos (ej. 'q' tras 'o')
+            cont_weight = 0.0
+            for k, pk in s_probs.items():
+                if k > s_obs:
+                    missing = k - s_obs
+                    step_decay = (0.36 if is_drawing else 0.22) ** missing
+                    expected_k_len = max(8.0, float(len_map.get(k, med_len)))
+                    expected_prefix = expected_k_len * (s_obs / k)
+                    prefix_ratio = obs_len / max(expected_prefix, 6.0)
+                    prefix_fit = math.exp(
+                        -0.8
+                        * (max(0.0, abs(math.log(max(prefix_ratio, 0.25))) - 0.35) ** 2)
+                    )
+                    cont_weight += pk * step_decay * prefix_fit
+
+            excess_weight = 0.0
+            for k, pk in s_probs.items():
+                if k < s_obs:
+                    excess = s_obs - k
+                    excess_weight += pk * (0.018 ** excess)
+
+            stroke_likelihood = max(1e-6, complete_weight + cont_weight + excess_weight)
+
+            length_bias = 0.11 * obs_len * math.log(max(med_len, 8.0) / 20.0)
+            adjusted_scores[ch] = raw_ll - length_bias + math.log(stroke_likelihood)
+
+        bg_score = obs_len * -2.65
+
+        base_temp = max(float(self.temperatures.get(self.mode, 1.0)), 1e-3)
+        eff_temp = base_temp * max(1.0, obs_len / 28.0)
+
+        max_adj = max(max(adjusted_scores.values()), bg_score)
+        exps = {
+            ch: math.exp((val - max_adj) / eff_temp)
+            for ch, val in adjusted_scores.items()
+        }
+        bg_exp = math.exp((bg_score - max_adj) / eff_temp)
+        total_exp = (sum(exps.values()) + bg_exp) or 1.0
+
+        ranking = [
+            (ch, exps[ch] / total_exp, raw_scores[ch])
+            for ch in adjusted_scores
+        ]
+        ranking.sort(key=lambda item: item[1], reverse=True)
+        return ranking
+
+    # inferencia HMM en tiempo real
+    
     def schedule_inference(self):
         if self._inference_id is None:
             self._inference_id = self.root.after(80, self.run_inference)
@@ -1682,11 +1841,7 @@ class HMMApp:
                 obs = extract_3d(self.strokes, sectors=8, step_units=0.018)
 
             self.last_observations = obs
-            ranking = classify(
-                self._mode_info,
-                obs,
-                temperature=self.temperatures[self.mode],
-            )
+            ranking = self._classify_with_stroke_context(obs)
             self.prediction = ranking
             self._update_prediction_ui(ranking)
 
@@ -1694,11 +1849,19 @@ class HMMApp:
             model = self._mode_info.get(best_char)
             if model:
                 current = self.strokes[-1][-1]
-                self.future = (
-                    project_2d(model, obs, current[:2], sectors=8)
-                    if self.mode == "2d"
-                    else project_3d(model, obs, np.array(current[:3]), sectors=8)
-                )
+                if self.mode == "2d":
+                    projected, aligned = self._project_2d_completion(best_char, model, obs)
+                    if aligned:
+                        self.future = projected
+                    else:
+                        fallback = project_2d(
+                            model, obs, current[:2], sectors=8, horizon=16
+                        )
+                        self.future = [fallback] if len(fallback) > 1 else []
+                else:
+                    self.future = project_3d(
+                        model, obs, np.array(current[:3]), sectors=8
+                    )
             else:
                 self.future = []
         except Exception as exc:
@@ -1707,9 +1870,8 @@ class HMMApp:
                 self.status_label.configure(text=f"Error: {str(exc)[:40]}")
         self.redraw()
 
-    # -----------------------------------------------------------------------
-    # Actualización visual de Predicción, Confianza y Probabilidades (27 letras)
-    # -----------------------------------------------------------------------
+    # actualización visual de predicción, confianza y probabilidades (27 letras)
+    
     def _draw_prediction_badge(self, char: str):
         if not self.pred_badge_canvas:
             return
@@ -1791,9 +1953,332 @@ class HMMApp:
             )
             self._redraw_single_prob_bar(idx)
 
-    # -----------------------------------------------------------------------
-    # Renderizado del lienzo central 2D y 3D (con punto inicial y punto final)
-    # -----------------------------------------------------------------------
+    # renderizado del lienzo central 2D y 3D (con punto inicial y punto final)
+
+    @staticmethod
+    def _polyline_length(pts: np.ndarray) -> float:
+        if len(pts) < 2:
+            return 0.0
+        diffs = np.diff(pts, axis=0)
+        return float(np.hypot(diffs[:, 0], diffs[:, 1]).sum())
+
+    @staticmethod
+    def _resample_polyline(pts: np.ndarray, count: int) -> np.ndarray:
+        pts = np.asarray(pts, dtype=float)
+        if len(pts) == 0:
+            return np.zeros((0, 2), dtype=float)
+        if len(pts) == 1 or count <= 1:
+            return np.repeat(pts[:1], max(1, count), axis=0)
+        diffs = np.diff(pts, axis=0)
+        seg_lens = np.hypot(diffs[:, 0], diffs[:, 1])
+        cum = np.concatenate(([0.0], np.cumsum(seg_lens)))
+        total = float(cum[-1])
+        if total < 1e-6:
+            return np.repeat(pts[:1], count, axis=0)
+        targets = np.linspace(0.0, total, count)
+        return np.column_stack([
+            np.interp(targets, cum, pts[:, 0]),
+            np.interp(targets, cum, pts[:, 1]),
+        ])
+
+    @classmethod
+    def _fit_similarity_2d(
+        cls,
+        src: np.ndarray,
+        dst: np.ndarray,
+        max_angle_deg: float = 10.0,
+    ) -> tuple[float, np.ndarray, np.ndarray, np.ndarray, float]:
+        
+        mu_src = src.mean(axis=0)
+        mu_dst = dst.mean(axis=0)
+        A = src - mu_src
+        B = dst - mu_dst
+
+        len_src = cls._polyline_length(src)
+        len_dst = cls._polyline_length(dst)
+        if len_src < 1e-6 or len_dst < 1e-6:
+            return 1.0, np.eye(2), mu_src, mu_dst, float("inf")
+
+        scale = float(np.clip(len_dst / len_src, 0.45, 1.65))
+
+        H = A.T @ B
+        angle = math.atan2(float(H[0, 1] - H[1, 0]), float(H[0, 0] + H[1, 1]))
+        max_rad = math.radians(max_angle_deg)
+        angle = max(-max_rad, min(max_rad, angle))
+        c, s = math.cos(angle), math.sin(angle)
+        R = np.array([[c, s], [-s, c]], dtype=float)
+
+        aligned = scale * (A @ R) + mu_dst
+        norm_factor = max(len_dst, 50.0)
+        rms_err = float(np.sqrt(np.mean(np.sum((aligned - dst) ** 2, axis=1)))) / norm_factor
+        end_err = float(np.linalg.norm(aligned[-1] - dst[-1])) / norm_factor
+        rot_penalty = 0.12 * abs(angle)
+        return scale, R, mu_src, mu_dst, rms_err + 0.5 * end_err + rot_penalty
+
+    @classmethod
+    def _build_continuous_guide(
+        cls, guide_strokes: list[np.ndarray]
+    ) -> tuple[np.ndarray, list[np.ndarray]]:
+        # combina trazos conectados de una letra multitrazos y separa diacríticos
+        body = [guide_strokes[0]]
+        floating: list[np.ndarray] = []
+        for st in guide_strokes[1:]:
+            gap = float(np.linalg.norm(st[0] - body[-1][-1]))
+            st_len = cls._polyline_length(st)
+            if gap > 220.0 and st_len < 360.0 and float(np.mean(st[:, 1])) < 360.0:
+                floating.append(st)
+            else:
+                body.append(st)
+        return np.vstack(body), floating
+
+    @staticmethod
+    def _clamp_to_canvas(
+        polylines: list[np.ndarray],
+        anchor: np.ndarray,
+        margin: float = 28.0,
+    ) -> list[np.ndarray]:
+        # mantiene toda la proyección dentro de los límites visibles del lienzo [0..1000]
+        if not polylines:
+            return polylines
+        all_pts = np.vstack(polylines)
+        min_xy = all_pts.min(axis=0)
+        max_xy = all_pts.max(axis=0)
+        sx, sy = 1.0, 1.0
+        if min_xy[0] < margin and anchor[0] - min_xy[0] > 1e-3:
+            sx = min(sx, (anchor[0] - margin) / (anchor[0] - min_xy[0]))
+        if max_xy[0] > 1000.0 - margin and max_xy[0] - anchor[0] > 1e-3:
+            sx = min(sx, (1000.0 - margin - anchor[0]) / (max_xy[0] - anchor[0]))
+        if min_xy[1] < margin and anchor[1] - min_xy[1] > 1e-3:
+            sy = min(sy, (anchor[1] - margin) / (anchor[1] - min_xy[1]))
+        if max_xy[1] > 1000.0 - margin and max_xy[1] - anchor[1] > 1e-3:
+            sy = min(sy, (1000.0 - margin - anchor[1]) / (max_xy[1] - anchor[1]))
+        s = max(0.35, min(sx, sy))
+        if s >= 0.999:
+            return polylines
+        return [anchor + s * (poly - anchor) for poly in polylines]
+
+    def _project_2d_completion(
+        self, best_char: str, model: HMM, obs: list[int]
+    ) -> tuple[list[list[tuple[float, float]]], bool]:
+        # proyecta desde el último punto escrito cómo quedaría completo el trazo
+        char = (best_char or "").lower()
+        if char not in TRACING_GUIDES or not self.strokes:
+            return [], False
+
+        user_strokes = [
+            np.asarray([[p[0], p[1]] for p in st], dtype=float)
+            for st in self.strokes
+            if len(st) > 0
+        ]
+        total_pts = sum(len(st) for st in user_strokes)
+        if not user_strokes or total_pts < 4:
+            return [], False
+
+        guide_strokes = [
+            np.asarray(st, dtype=float) * 1000.0 for st in TRACING_GUIDES[char]
+        ]
+        if not guide_strokes:
+            return [], False
+
+        last_point = user_strokes[-1][-1]
+
+        substantive = [st for st in user_strokes if self._polyline_length(st) >= 28.0]
+        if not substantive:
+            substantive = [np.vstack(user_strokes)]
+
+        n_guide = len(guide_strokes)
+        if len(substantive) > n_guide:
+            if n_guide == 1:
+                substantive = [np.vstack(substantive)]
+            else:
+                substantive = substantive[: n_guide - 1] + [
+                    np.vstack(substantive[n_guide - 1 :])
+                ]
+        n_user = len(substantive)
+
+        try:
+            gamma_last = model.posterior(obs)[-1]
+            p_hmm = float(
+                (gamma_last @ np.arange(model.states, dtype=float))
+                / max(model.states - 1, 1)
+            )
+            p_hmm = float(np.clip(p_hmm, 0.12, 0.96))
+        except Exception:
+            p_hmm = 0.5
+
+        candidates: list[tuple[float, list[np.ndarray]]] = []
+
+        # hipótesis 1: correspondencia trazo a trazo
+        if n_user <= n_guide:
+            active_idx = n_user - 1
+            active_guide_dense = self._resample_polyline(guide_strokes[active_idx], 100)
+            completed_src = [
+                self._resample_polyline(guide_strokes[i], 30) for i in range(active_idx)
+            ]
+            completed_dst = [
+                self._resample_polyline(substantive[i], 30) for i in range(active_idx)
+            ]
+            active_dst = self._resample_polyline(substantive[active_idx], 36)
+
+            best_h1 = None
+            for frac in np.linspace(0.12, 1.00, 45):
+                cut = int(
+                    np.clip(
+                        round(frac * (len(active_guide_dense) - 1)),
+                        1,
+                        len(active_guide_dense) - 1,
+                    )
+                )
+                prefix_src = self._resample_polyline(active_guide_dense[: cut + 1], 36)
+
+                src_all = (
+                    np.vstack(completed_src + [prefix_src])
+                    if completed_src
+                    else prefix_src
+                )
+                dst_all = (
+                    np.vstack(completed_dst + [active_dst])
+                    if completed_dst
+                    else active_dst
+                )
+
+                scale, R, mu_s, mu_d, err = self._fit_similarity_2d(src_all, dst_all)
+                all_guide_pts = np.vstack(guide_strokes)
+                full_tr = scale * ((all_guide_pts - mu_s) @ R) + mu_d
+                oob = float(
+                    np.maximum(0.0, 20.0 - full_tr).sum()
+                    + np.maximum(0.0, full_tr - 980.0).sum()
+                ) / 800.0
+
+                overall_prog = (active_idx + frac) / n_guide
+                reg = (
+                    0.18 * abs(overall_prog - p_hmm)
+                    + 0.14 * abs(math.log(max(scale, 1e-3)))
+                    + 0.30 * oob
+                )
+                score = err + reg
+                if best_h1 is None or score < best_h1[0]:
+                    best_h1 = (score, frac, cut, scale, R, mu_s, mu_d)
+
+            if best_h1 is not None:
+                score, frac, cut, scale, R, mu_s, mu_d = best_h1
+                projected_list: list[np.ndarray] = []
+
+                def to_canvas1(pts: np.ndarray) -> np.ndarray:
+                    return scale * ((pts - mu_s) @ R) + mu_d
+
+                anchor_shift = last_point - to_canvas1(active_guide_dense[cut])
+                template_end = to_canvas1(active_guide_dense[-1]) + anchor_shift
+                already_at_end = float(np.linalg.norm(last_point - template_end)) < 40.0
+
+                suffix = active_guide_dense[cut:]
+                if len(suffix) >= 2 and frac < 0.92 and not already_at_end:
+                    rem = to_canvas1(suffix) + anchor_shift
+                    if self._polyline_length(rem) >= 22.0:
+                        projected_list.append(
+                            self._resample_polyline(rem, max(16, len(rem) // 2))
+                        )
+
+                body_shift = (
+                    0.35 * anchor_shift
+                    if (frac >= 0.92 or already_at_end)
+                    else anchor_shift
+                )
+                for rem_idx in range(n_user, n_guide):
+                    rem_st = guide_strokes[rem_idx]
+                    rem_dense = self._resample_polyline(
+                        rem_st, max(12, len(rem_st) * 4)
+                    )
+                    rem_tr = to_canvas1(rem_dense) + body_shift
+                    if not projected_list and rem_idx == n_user:
+                        gap = float(np.linalg.norm(rem_tr[0] - last_point))
+                        guide_gap = float(
+                            np.linalg.norm(
+                                guide_strokes[rem_idx][0]
+                                - guide_strokes[rem_idx - 1][-1]
+                            )
+                        )
+                        if guide_gap < 280.0 and gap < 380.0:
+                            retrace = np.linspace(
+                                last_point, rem_tr[0], max(4, int(gap / 25.0))
+                            )
+                            rem_tr = np.vstack([retrace[:-1], rem_tr])
+                    projected_list.append(rem_tr)
+
+                projected_list = self._clamp_to_canvas(projected_list, last_point)
+                weight_h1 = 0.88 if (n_user == 1 and n_guide > 1) else 1.0
+                candidates.append((score * weight_h1, projected_list))
+
+        # hipótesis 2: Letra multitrazos dibujada en un solo trazo continuo
+        if n_user == 1 and n_guide > 1:
+            cont_guide, floating_diacritics = self._build_continuous_guide(guide_strokes)
+            cont_dense = self._resample_polyline(cont_guide, 120)
+            user_res = self._resample_polyline(substantive[0], 40)
+
+            best_h2 = None
+            for frac in np.linspace(0.12, 1.00, 45):
+                cut = int(
+                    np.clip(
+                        round(frac * (len(cont_dense) - 1)), 1, len(cont_dense) - 1
+                    )
+                )
+                prefix_src = self._resample_polyline(cont_dense[: cut + 1], 40)
+                scale, R, mu_s, mu_d, err = self._fit_similarity_2d(prefix_src, user_res)
+
+                all_guide_pts = np.vstack(guide_strokes)
+                full_tr = scale * ((all_guide_pts - mu_s) @ R) + mu_d
+                oob = float(
+                    np.maximum(0.0, 20.0 - full_tr).sum()
+                    + np.maximum(0.0, full_tr - 980.0).sum()
+                ) / 800.0
+
+                reg = (
+                    0.18 * abs(frac - p_hmm)
+                    + 0.14 * abs(math.log(max(scale, 1e-3)))
+                    + 0.30 * oob
+                )
+                score = err + reg
+                if best_h2 is None or score < best_h2[0]:
+                    best_h2 = (score, frac, cut, scale, R, mu_s, mu_d)
+
+            if best_h2 is not None:
+                score, frac, cut, scale, R, mu_s, mu_d = best_h2
+                projected_list = []
+
+                def to_canvas2(pts: np.ndarray) -> np.ndarray:
+                    return scale * ((pts - mu_s) @ R) + mu_d
+
+                anchor_shift = last_point - to_canvas2(cont_dense[cut])
+                template_end = to_canvas2(cont_dense[-1]) + anchor_shift
+                already_at_end = float(np.linalg.norm(last_point - template_end)) < 40.0
+
+                suffix = cont_dense[cut:]
+                if len(suffix) >= 2 and frac < 0.92 and not already_at_end:
+                    rem = to_canvas2(suffix) + anchor_shift
+                    if self._polyline_length(rem) >= 22.0:
+                        projected_list.append(
+                            self._resample_polyline(rem, max(16, len(rem) // 2))
+                        )
+
+                for dia in floating_diacritics:
+                    dia_dense = self._resample_polyline(dia, max(10, len(dia) * 4))
+                    dia_tr = to_canvas2(dia_dense) + 0.35 * anchor_shift
+                    projected_list.append(dia_tr)
+
+                projected_list = self._clamp_to_canvas(projected_list, last_point)
+                candidates.append((score, projected_list))
+
+        if not candidates:
+            return [], False
+
+        _, best_polylines = min(candidates, key=lambda item: item[0])
+        result = [
+            [(float(pt[0]), float(pt[1])) for pt in poly]
+            for poly in best_polylines
+            if len(poly) >= 1
+        ]
+        return result, True
+
     def _draw_2d_scene(self):
         w = max(int(self.canvas.winfo_width()), 2)
         h = max(int(self.canvas.winfo_height()), 2)
@@ -1831,24 +2316,31 @@ class HMMApp:
             )
             return
 
-        # 1. Continuación estimada (línea discontinua)
-        if len(self.future) > 1:
-            last_pt = self.strokes[-1][-1]
-            future_pts = [
-                (last_pt[0] / 1000.0 * w, last_pt[1] / 1000.0 * h)
-            ] + [
-                (x / 1000.0 * w, y / 1000.0 * h) for x, y in self.future
-            ]
-            self.canvas.create_line(
-                *(v for xy in future_pts for v in xy),
-                fill=ESTIMATED,
-                width=3,
-                dash=(6, 6),
-                smooth=True,
-                capstyle="round",
-            )
+        # proyección estimada completa desde el último punto (línea discontinua)
+        for poly in self.future:
+            if not poly:
+                continue
+            pts = [(x / 1000.0 * w, y / 1000.0 * h) for x, y in poly]
+            span = math.hypot(pts[-1][0] - pts[0][0], pts[-1][1] - pts[0][1])
+            if len(pts) == 1 or span < 8.0:
+                cx_d, cy_d = pts[0]
+                self.canvas.create_oval(
+                    cx_d - 4.5, cy_d - 4.5, cx_d + 4.5, cy_d + 4.5,
+                    fill=ESTIMATED, outline="",
+                )
+            else:
+                self.canvas.create_line(
+                    *(v for xy in pts for v in xy),
+                    fill=ESTIMATED,
+                    width=3,
+                    dash=(6, 5),
+                    smooth=True,
+                    splinesteps=20,
+                    capstyle="round",
+                    joinstyle="round",
+                )
 
-        # 2. Trayectoria real (trazo grueso oscuro con acabado suave)
+        # trayectoria real (trazo grueso oscuro con acabado suave)
         for stroke in self.strokes:
             pts = [(p[0] / 1000.0 * w, p[1] / 1000.0 * h) for p in stroke]
             if len(pts) > 1:
@@ -1867,7 +2359,7 @@ class HMMApp:
                     x - 4, y - 4, x + 4, y + 4, fill=NAVY, outline=""
                 )
 
-        # 3. Punto inicial (cian) y Punto final (coral)
+        # punto inicial (cian) y Punto final (coral)
         first_raw = self.strokes[0][0]
         last_raw = self.strokes[-1][-1]
         sx, sy = first_raw[0] / 1000.0 * w, first_raw[1] / 1000.0 * h

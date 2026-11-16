@@ -1,11 +1,11 @@
-"""Chequeos básicos de dataset Glifo. Ejecutable en terminal."""
+# chequeos básicos de dataset Glifo. Ejecutable en terminal
 from pathlib import Path
 import json
 import collections
 from src.FeatureExtractor import LETTERS, validate_strokes
 
 ROOT = Path(__file__).resolve().parents[1]
-file = ROOT / 'data/raw/glifo-dataset-2026-11-02.json'
+file = ROOT / 'data/raw/glifo-dataset-2026-11-04.json'
 source = json.loads(file.read_text(encoding='utf-8'))
 assert set(source) == set(LETTERS)
 print('Letra | Muestras | Trazos | Puntos | Invalidas')

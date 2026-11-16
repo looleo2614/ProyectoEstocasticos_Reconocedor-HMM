@@ -1,8 +1,4 @@
-"""Calibración offline con un conjunto de VALIDACIÓN separado del test.
-
-No reutilizar el holdout final para ajustar temperatura: eso contamina la evaluación.
-Formato: JSON lista de {'scores': {'a': log_likelihood, ...}, 'label': 'a'}.
-"""
+# calibración offline con un conjunto de VALIDACIÓN separado del test.
 import argparse
 import json
 import math

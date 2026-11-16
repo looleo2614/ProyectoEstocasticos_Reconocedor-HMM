@@ -1,8 +1,5 @@
-"""Evaluación reproducible por prefijos y calibración sobre el holdout existente.
+# evaluación reproducible por prefijos y calibración sobre el holdout existente.
 
-No entrena, no modifica los HMM y no utiliza muestras reservadas para ajustar
-hiperparámetros. El modo 3D es EXCLUSIVAMENTE sintético.
-"""
 from __future__ import annotations
 import argparse
 import json
@@ -16,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def truncate_sample(sample, fraction):
-    """Prefijo por cantidad de puntos, conservando límites entre trazos."""
+    # prefijo por cantidad de puntos, conservando límites entre trazos
     total = sum(len(s) for s in sample)
     keep = max(1, int(round(total * fraction)))
     result = []
